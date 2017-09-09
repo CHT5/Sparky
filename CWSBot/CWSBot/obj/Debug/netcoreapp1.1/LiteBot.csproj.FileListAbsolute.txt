@@ -1,0 +1,46 @@
+C:\Users\LunarLite\Desktop\Bot.Template-master\Bot.Template\bin\Debug\netcoreapp1.1\LiteBot.deps.json
+C:\Users\LunarLite\Desktop\Bot.Template-master\Bot.Template\bin\Debug\netcoreapp1.1\LiteBot.runtimeconfig.json
+C:\Users\LunarLite\Desktop\Bot.Template-master\Bot.Template\bin\Debug\netcoreapp1.1\LiteBot.runtimeconfig.dev.json
+C:\Users\LunarLite\Desktop\Bot.Template-master\Bot.Template\bin\Debug\netcoreapp1.1\LiteBot.dll
+C:\Users\LunarLite\Desktop\Bot.Template-master\Bot.Template\bin\Debug\netcoreapp1.1\LiteBot.pdb
+C:\Users\LunarLite\Desktop\Bot.Template-master\Bot.Template\obj\Debug\netcoreapp1.1\LiteBot.csprojResolveAssemblyReference.cache
+C:\Users\LunarLite\Desktop\Bot.Template-master\Bot.Template\obj\Debug\netcoreapp1.1\LiteBot.AssemblyInfo.cs
+C:\Users\LunarLite\Desktop\Bot.Template-master\Bot.Template\obj\Debug\netcoreapp1.1\LiteBot.dll
+C:\Users\LunarLite\Desktop\Bot.Template-master\Bot.Template\obj\Debug\netcoreapp1.1\LiteBot.pdb
+C:\Users\LunarLite\Desktop\LiteBoxBot\Bot.Template\bin\Debug\netcoreapp1.1\LiteBot.deps.json
+C:\Users\LunarLite\Desktop\LiteBoxBot\Bot.Template\bin\Debug\netcoreapp1.1\LiteBot.runtimeconfig.json
+C:\Users\LunarLite\Desktop\LiteBoxBot\Bot.Template\bin\Debug\netcoreapp1.1\LiteBot.runtimeconfig.dev.json
+C:\Users\LunarLite\Desktop\LiteBoxBot\Bot.Template\bin\Debug\netcoreapp1.1\LiteBot.dll
+C:\Users\LunarLite\Desktop\LiteBoxBot\Bot.Template\bin\Debug\netcoreapp1.1\LiteBot.pdb
+C:\Users\LunarLite\Desktop\LiteBoxBot\Bot.Template\obj\Debug\netcoreapp1.1\LiteBot.csprojResolveAssemblyReference.cache
+C:\Users\LunarLite\Desktop\LiteBoxBot\Bot.Template\obj\Debug\netcoreapp1.1\LiteBot.AssemblyInfo.cs
+C:\Users\LunarLite\Desktop\LiteBoxBot\Bot.Template\obj\Debug\netcoreapp1.1\LiteBot.dll
+C:\Users\LunarLite\Desktop\LiteBoxBot\Bot.Template\obj\Debug\netcoreapp1.1\LiteBot.pdb
+C:\Users\LunarLite\Desktop\LiteBox Repo\LiteBox-Repo\LiteBoxBot\Bot.Template\bin\Debug\netcoreapp1.1\LiteBot.deps.json
+C:\Users\LunarLite\Desktop\LiteBox Repo\LiteBox-Repo\LiteBoxBot\Bot.Template\bin\Debug\netcoreapp1.1\LiteBot.runtimeconfig.json
+C:\Users\LunarLite\Desktop\LiteBox Repo\LiteBox-Repo\LiteBoxBot\Bot.Template\bin\Debug\netcoreapp1.1\LiteBot.runtimeconfig.dev.json
+C:\Users\LunarLite\Desktop\LiteBox Repo\LiteBox-Repo\LiteBoxBot\Bot.Template\bin\Debug\netcoreapp1.1\LiteBot.dll
+C:\Users\LunarLite\Desktop\LiteBox Repo\LiteBox-Repo\LiteBoxBot\Bot.Template\bin\Debug\netcoreapp1.1\LiteBot.pdb
+C:\Users\LunarLite\Desktop\LiteBox Repo\LiteBox-Repo\LiteBoxBot\Bot.Template\obj\Debug\netcoreapp1.1\LiteBot.csprojResolveAssemblyReference.cache
+C:\Users\LunarLite\Desktop\LiteBox Repo\LiteBox-Repo\LiteBoxBot\Bot.Template\obj\Debug\netcoreapp1.1\LiteBot.AssemblyInfo.cs
+C:\Users\LunarLite\Desktop\LiteBox Repo\LiteBox-Repo\LiteBoxBot\Bot.Template\obj\Debug\netcoreapp1.1\LiteBot.dll
+C:\Users\LunarLite\Desktop\LiteBox Repo\LiteBox-Repo\LiteBoxBot\Bot.Template\obj\Debug\netcoreapp1.1\LiteBot.pdb
+C:\Users\LunarLite\Desktop\LiteBox Repo\LiteBox-Repo\LiteBoxBot\LiteBox\bin\Debug\netcoreapp1.1\LiteBot.deps.json
+C:\Users\LunarLite\Desktop\LiteBox Repo\LiteBox-Repo\LiteBoxBot\LiteBox\bin\Debug\netcoreapp1.1\LiteBot.runtimeconfig.json
+C:\Users\LunarLite\Desktop\LiteBox Repo\LiteBox-Repo\LiteBoxBot\LiteBox\bin\Debug\netcoreapp1.1\LiteBot.runtimeconfig.dev.json
+C:\Users\LunarLite\Desktop\LiteBox Repo\LiteBox-Repo\LiteBoxBot\LiteBox\bin\Debug\netcoreapp1.1\LiteBot.dll
+C:\Users\LunarLite\Desktop\LiteBox Repo\LiteBox-Repo\LiteBoxBot\LiteBox\bin\Debug\netcoreapp1.1\LiteBot.pdb
+C:\Users\LunarLite\Desktop\LiteBox Repo\LiteBox-Repo\LiteBoxBot\LiteBox\obj\Debug\netcoreapp1.1\LiteBot.csprojResolveAssemblyReference.cache
+C:\Users\LunarLite\Desktop\LiteBox Repo\LiteBox-Repo\LiteBoxBot\LiteBox\obj\Debug\netcoreapp1.1\LiteBot.AssemblyInfo.cs
+C:\Users\LunarLite\Desktop\LiteBox Repo\LiteBox-Repo\LiteBoxBot\LiteBox\obj\Debug\netcoreapp1.1\LiteBot.dll
+C:\Users\LunarLite\Desktop\LiteBox Repo\LiteBox-Repo\LiteBoxBot\LiteBox\obj\Debug\netcoreapp1.1\LiteBot.pdb
+C:\Users\LunarLite\Desktop\LiteBox\LiteBoxBot\LiteBox\bin\Debug\netcoreapp1.1\LiteBot.deps.json
+C:\Users\LunarLite\Desktop\LiteBox\LiteBoxBot\LiteBox\bin\Debug\netcoreapp1.1\LiteBot.runtimeconfig.json
+C:\Users\LunarLite\Desktop\LiteBox\LiteBoxBot\LiteBox\bin\Debug\netcoreapp1.1\LiteBot.runtimeconfig.dev.json
+C:\Users\LunarLite\Desktop\LiteBox\LiteBoxBot\LiteBox\bin\Debug\netcoreapp1.1\LiteBot.dll
+C:\Users\LunarLite\Desktop\LiteBox\LiteBoxBot\LiteBox\bin\Debug\netcoreapp1.1\LiteBot.pdb
+C:\Users\LunarLite\Desktop\LiteBox\LiteBoxBot\LiteBox\obj\Debug\netcoreapp1.1\LiteBot.csprojResolveAssemblyReference.cache
+C:\Users\LunarLite\Desktop\LiteBox\LiteBoxBot\LiteBox\obj\Debug\netcoreapp1.1\LiteBot.csproj.CoreCompileInputs.cache
+C:\Users\LunarLite\Desktop\LiteBox\LiteBoxBot\LiteBox\obj\Debug\netcoreapp1.1\LiteBot.AssemblyInfo.cs
+C:\Users\LunarLite\Desktop\LiteBox\LiteBoxBot\LiteBox\obj\Debug\netcoreapp1.1\LiteBot.dll
+C:\Users\LunarLite\Desktop\LiteBox\LiteBoxBot\LiteBox\obj\Debug\netcoreapp1.1\LiteBot.pdb

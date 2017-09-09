@@ -1,0 +1,9 @@
+C:\Users\LunarLite\Desktop\Bot.Template-master\Bot.Template\bin\Debug\netcoreapp1.1\Bot.Template.deps.json
+C:\Users\LunarLite\Desktop\Bot.Template-master\Bot.Template\bin\Debug\netcoreapp1.1\Bot.Template.runtimeconfig.json
+C:\Users\LunarLite\Desktop\Bot.Template-master\Bot.Template\bin\Debug\netcoreapp1.1\Bot.Template.runtimeconfig.dev.json
+C:\Users\LunarLite\Desktop\Bot.Template-master\Bot.Template\bin\Debug\netcoreapp1.1\Bot.Template.dll
+C:\Users\LunarLite\Desktop\Bot.Template-master\Bot.Template\bin\Debug\netcoreapp1.1\Bot.Template.pdb
+C:\Users\LunarLite\Desktop\Bot.Template-master\Bot.Template\obj\Debug\netcoreapp1.1\Bot.Template.csprojResolveAssemblyReference.cache
+C:\Users\LunarLite\Desktop\Bot.Template-master\Bot.Template\obj\Debug\netcoreapp1.1\Bot.Template.AssemblyInfo.cs
+C:\Users\LunarLite\Desktop\Bot.Template-master\Bot.Template\obj\Debug\netcoreapp1.1\Bot.Template.dll
+C:\Users\LunarLite\Desktop\Bot.Template-master\Bot.Template\obj\Debug\netcoreapp1.1\Bot.Template.pdb
