@@ -156,5 +156,34 @@ namespace CWSBot.Modules.Public
                 await logChannel.SendMessageAsync("**" + user.Username + "** is banned by **" + Context.User.Username + "** with the reason **" + reason + "**.");
             }
         }
+
+        [Command("softban", RunMode = RunMode.Async)]
+        [Summary("Deletes 1 day worth of messages from a misbehaving user.")]
+        public async Task softban(IGuildUser user)
+        {
+            string reason = "If you are seeing this, the softban didn't complete. Please manually unban the user.";
+            var Bot = await Context.Guild.GetUserAsync(Context.Client.CurrentUser.Id);
+            var GuildUser = await Context.Guild.GetUserAsync(Context.User.Id);
+            if (!GuildUser.GuildPermissions.BanMembers)
+            {
+                var channel = await GuildUser.GetOrCreateDMChannelAsync();
+                await channel.SendMessageAsync("Nice try.");
+            }
+            else if (!Bot.GuildPermissions.BanMembers)
+            {
+                var channel = await GuildUser.GetOrCreateDMChannelAsync();
+                await channel.SendMessageAsync("Nice try, bot doesn't have the required permissions.");
+            }
+            else
+            {
+                var guild = Context.Guild;
+                var channel = await GuildUser.GetOrCreateDMChannelAsync();
+                await channel.SendMessageAsync("**" + user.Username + "** has been banned.");
+                await guild.AddBanAsync(user, 1, reason);
+                SocketTextChannel logChannel = (Context.Guild as SocketGuild).TextChannels.FirstOrDefault(x => x.Name == "mod_logs");
+                await logChannel.SendMessageAsync("**" + user.Username + "** is softbanned by " + Context.User.Username + ".");
+                await guild.RemoveBanAsync(user);
+            }
+        }
     }
 }
