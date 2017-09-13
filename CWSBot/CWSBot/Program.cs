@@ -114,8 +114,18 @@ namespace CWSBot
         public async Task InstallCommands()
         {
             client.MessageReceived += HandleCommand;
+            client.UserJoined += AccountJoined;
+            client.UserLeft += AccountLeft;
+            client.Ready += OnConnected;
             await commands.AddModulesAsync(Assembly.GetEntryAssembly());
         }
+
+        public async Task OnConnected()
+        {
+            //Set game status.
+            await client.SetGameAsync(prefixstring + "help with help");
+        }
+        
         public async Task HandleCommand(SocketMessage messageParam)
         {
             var message = messageParam as SocketUserMessage;
