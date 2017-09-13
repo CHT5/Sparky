@@ -98,91 +98,82 @@ namespace CWSBot.Modules.Public
                 $"[{Context.User.Username}] warned [{user.Username}], reason: [{reason}], resulting in the loss of [-{karmaReduction}] karma```");
         }
         
-        [Command("kick", RunMode = RunMode.Async)]
-        [Summary("Kicks someone off the guild.")]
-        public async Task kick(IGuildUser user, [Remainder] string reason)
+        [Command("kick")]
+        [Summary("Kicks someone from the guild.")]
+        public async Task Kick(IGuildUser user, [Remainder] string reason)
         {
-            var Bot = await Context.Guild.GetUserAsync(Context.Client.CurrentUser.Id);
-            var GuildUser = await Context.Guild.GetUserAsync(Context.User.Id);
-            if (!GuildUser.GuildPermissions.KickMembers)
+            // stores context user as a guild user
+            var contextUser = Context.Guild.GetUser(Context.User.Id);
+            // check context users perms
+            if (!contextUser.GuildPermissions.KickMembers)
             {
-                var channel = await GuildUser.GetOrCreateDMChannelAsync();
-                await channel.SendMessageAsync("Nice try.");
-            }
-            else if (!Bot.GuildPermissions.KickMembers)
-            {
-                var channel = await GuildUser.GetOrCreateDMChannelAsync();
-                await channel.SendMessageAsync("Nice try, bot doesn't have the required permissions.");
+                await ReplyAsync("Nice try.");
             }
             else
             {
-                var channel = await GuildUser.GetOrCreateDMChannelAsync();
-                await channel.SendMessageAsync(user.Mention + " has been kicked.");
-                var reasondm = await user.GetOrCreateDMChannelAsync();
-                await reasondm.SendMessageAsync("You have been kicked from " + Context.Guild.Name + " for "
-                    + reason + ". If you feel the kick was made in mistake, contact a staff member.");
-                await user.KickAsync(reason);
+                // sends dm to the banned user, logs the kick, kicks the user
+                var dmChannel = await user.GetOrCreateDMChannelAsync();
+                await dmChannel.SendMessageAsync($"You have been kicked from {Context.Guild.Name}.\n" +
+                    $"Reason: {reason}\n" +
+                    $"If you feel you were mistakenly kicked, contact a staff member.");
+                await user.KickAsync();
                 SocketTextChannel logChannel = (Context.Guild as SocketGuild).TextChannels.FirstOrDefault(x => x.Name == "mod_logs");
-                await logChannel.SendMessageAsync("**" + user.Username + "** is kicked by **" + Context.User.Username + "** with the reason **" + reason + "**.");
+                await logChannel.SendMessageAsync($"```ini\n" +
+                    $"[{contextUser}] kicked [{user}]. Reason: [{reason}]\n" +
+                    $"```");
             }
         }
 
-        [Command("ban", RunMode = RunMode.Async)]
-        [Summary("Bans someone off the guild.")]
-        public async Task ban(IGuildUser user, [Remainder] string reason)
+        [Command("ban")]
+        [Summary("Bans someone from the guild.")]
+        public async Task Ban(IGuildUser user, [Remainder] string reason)
         {
-            var Bot = await Context.Guild.GetUserAsync(Context.Client.CurrentUser.Id);
-            var GuildUser = await Context.Guild.GetUserAsync(Context.User.Id);
-            if (!GuildUser.GuildPermissions.BanMembers)
+            // stores context user as a guild user
+            var contextUser = Context.Guild.GetUser(Context.User.Id);
+            // check context users perms
+            if (!contextUser.GuildPermissions.KickMembers)
             {
-                var channel = await GuildUser.GetOrCreateDMChannelAsync();
-                await channel.SendMessageAsync("Nice try.");
-            }
-            else if (!Bot.GuildPermissions.BanMembers)
-            {
-                var channel = await GuildUser.GetOrCreateDMChannelAsync();
-                await channel.SendMessageAsync("Nice try, bot doesn't have the required permissions.");
+                await ReplyAsync("Nice try.");
             }
             else
             {
-                var guild = Context.Guild;
-                var channel = await GuildUser.GetOrCreateDMChannelAsync();
-                await channel.SendMessageAsync(user.Mention + " has been banned.");
-                var reasondm = await user.GetOrCreateDMChannelAsync();
-                await reasondm.SendMessageAsync("You have been banned from " + Context.Guild.Name + " for "
-                    + reason + ". If you feel the ban was made in mistake, contact a staff member.");
-                await guild.AddBanAsync(user, 7, reason);
+                // sends dm to the banned user, logs the ban, bans the user
+                var dmChannel = await user.GetOrCreateDMChannelAsync();
+                await dmChannel.SendMessageAsync($"You have been kicked from {Context.Guild.Name}.\n" +
+                    $"Reason: {reason}\n" +
+                    $"If you feel you were mistakenly banned, contact a staff member.");
+                await Context.Guild.AddBanAsync(user, 7, reason);
                 SocketTextChannel logChannel = (Context.Guild as SocketGuild).TextChannels.FirstOrDefault(x => x.Name == "mod_logs");
-                await logChannel.SendMessageAsync("**" + user.Username + "** is banned by **" + Context.User.Username + "** with the reason **" + reason + "**.");
+                await logChannel.SendMessageAsync($"```ini\n" +
+                    $"[{contextUser}] banned [{user}]. Reason: [{reason}]\n" +
+                    $"```");
             }
         }
 
-        [Command("softban", RunMode = RunMode.Async)]
+        [Command("softban")]
         [Summary("Deletes 1 day worth of messages from a misbehaving user.")]
-        public async Task softban(IGuildUser user)
+        public async Task Softban(IGuildUser user, [Remainder] string reason)
         {
-            string reason = "If you are seeing this, the softban didn't complete. Please manually unban the user.";
-            var Bot = await Context.Guild.GetUserAsync(Context.Client.CurrentUser.Id);
-            var GuildUser = await Context.Guild.GetUserAsync(Context.User.Id);
-            if (!GuildUser.GuildPermissions.BanMembers)
+            // stores context user as a guild user
+            var contextUser = Context.Guild.GetUser(Context.User.Id);
+            // check context users perms
+            if (!contextUser.GuildPermissions.KickMembers)
             {
-                var channel = await GuildUser.GetOrCreateDMChannelAsync();
-                await channel.SendMessageAsync("Nice try.");
-            }
-            else if (!Bot.GuildPermissions.BanMembers)
-            {
-                var channel = await GuildUser.GetOrCreateDMChannelAsync();
-                await channel.SendMessageAsync("Nice try, bot doesn't have the required permissions.");
+                await ReplyAsync("Nice try.");
             }
             else
             {
-                var guild = Context.Guild;
-                var channel = await GuildUser.GetOrCreateDMChannelAsync();
-                await channel.SendMessageAsync("**" + user.Username + "** has been banned.");
-                await guild.AddBanAsync(user, 1, reason);
+                // sends dm to the softbanned user, logs the softban, softbans the user
+                var dmChannel = await user.GetOrCreateDMChannelAsync();
+                await dmChannel.SendMessageAsync($"You have been softbanned from {Context.Guild.Name}, feel free to rejoin.\n" +
+                    $"Reason: {reason}\n" +
+                    $"If you feel you were mistakenly softbanned, contact a staff member.");
+                await Context.Guild.AddBanAsync(user, 1);
+                await Context.Guild.RemoveBanAsync(user);
                 SocketTextChannel logChannel = (Context.Guild as SocketGuild).TextChannels.FirstOrDefault(x => x.Name == "mod_logs");
-                await logChannel.SendMessageAsync("**" + user.Username + "** is softbanned by " + Context.User.Username + ".");
-                await guild.RemoveBanAsync(user);
+                await logChannel.SendMessageAsync($"```ini\n" +
+                    $"[{contextUser}] softbanned [{user}]. Reason: [{reason}]\n" +
+                    $"```");
             }
         }
     }

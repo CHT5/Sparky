@@ -1,5 +1,5 @@
 {
-  "version": 2,
+  "version": 3,
   "targets": {
     ".NETCoreApp,Version=v1.1": {
       "Discord.Addons.InteractiveCommands/1.2.4": {
@@ -3142,7 +3142,7 @@
       ]
     },
     "Discord.Net.Commands/2.0.0-alpha-build-00823": {
-      "sha512": "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000",
+      "sha512": "5JG7ylHFfgtt07pFY9Rnc1xJXC9dTPvnlHYHi1BoMv/YKXybDLWmKm8mn/WHsjBYR0ZNP0g6kmbLfKtnsWCHIQ==",
       "type": "package",
       "path": "discord.net.commands/2.0.0-alpha-build-00823",
       "files": [
@@ -3153,7 +3153,7 @@
       ]
     },
     "Discord.Net.Core/2.0.0-alpha-build-00823": {
-      "sha512": "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000",
+      "sha512": "uwezPlIW64FBvgLETQ4yrtHHiYImRH20fwwBmt4oJA9APg61UL5NYt40qnpRMfAXfX9N0c1353nNW3m0tM4VSg==",
       "type": "package",
       "path": "discord.net.core/2.0.0-alpha-build-00823",
       "files": [
@@ -3168,7 +3168,7 @@
       ]
     },
     "Discord.Net.Rest/2.0.0-alpha-build-00823": {
-      "sha512": "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000",
+      "sha512": "NQSpYdZu2Mx48WaYu2BQC4tBloUqnheXQpj1x0JeGVU+jG1Rcmr7cIKzKcXi9NbZ7cDMvJtZrazt2mXvlQ2MoQ==",
       "type": "package",
       "path": "discord.net.rest/2.0.0-alpha-build-00823",
       "files": [
@@ -8938,15 +8938,28 @@
   },
   "project": {
     "version": "1.0.0",
+    "restoreSettings": {
+      "hideWarningsAndErrors": true
+    },
     "restore": {
-      "projectUniqueName": "C:\\Users\\LunarLite\\Desktop\\CWSBot Repo\\CWSBot Repo\\LiteBoxBot\\CWSBot\\CWSBot.csproj",
+      "projectUniqueName": "C:\\Users\\LunarLite\\Desktop\\CWSBot-C-\\CWSBot\\CWSBot\\CWSBot.csproj",
       "projectName": "CWSBot",
-      "projectPath": "C:\\Users\\LunarLite\\Desktop\\CWSBot Repo\\CWSBot Repo\\LiteBoxBot\\CWSBot\\CWSBot.csproj",
-      "outputPath": "C:\\Users\\LunarLite\\Desktop\\CWSBot Repo\\CWSBot Repo\\LiteBoxBot\\CWSBot\\obj\\",
+      "projectPath": "C:\\Users\\LunarLite\\Desktop\\CWSBot-C-\\CWSBot\\CWSBot\\CWSBot.csproj",
+      "packagesPath": "C:\\Users\\LunarLite\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\LunarLite\\Desktop\\CWSBot-C-\\CWSBot\\CWSBot\\obj\\",
       "projectStyle": "PackageReference",
+      "configFilePaths": [
+        "C:\\Users\\LunarLite\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+      ],
       "originalTargetFrameworks": [
         "netcoreapp1.1"
       ],
+      "sources": {
+        "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+        "https://api.nuget.org/v3/index.json": {},
+        "https://www.myget.org/F/discord-net/api/v3/index.json": {}
+      },
       "frameworks": {
         "netcoreapp1.1": {
           "projectReferences": {}
