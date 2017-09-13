@@ -119,8 +119,7 @@ namespace CWSBot.Modules.Public
                 await user.KickAsync();
                 SocketTextChannel logChannel = (Context.Guild as SocketGuild).TextChannels.FirstOrDefault(x => x.Name == "mod_logs");
                 await logChannel.SendMessageAsync($"```ini\n" +
-                    $"[{contextUser}] kicked [{user}]. Reason: [{reason}]\n" +
-                    $"```");
+                    $"[{contextUser}] kicked [{user}]. Reason: [{reason}]```");
             }
         }
 
@@ -145,8 +144,7 @@ namespace CWSBot.Modules.Public
                 await Context.Guild.AddBanAsync(user, 7, reason);
                 SocketTextChannel logChannel = (Context.Guild as SocketGuild).TextChannels.FirstOrDefault(x => x.Name == "mod_logs");
                 await logChannel.SendMessageAsync($"```ini\n" +
-                    $"[{contextUser}] banned [{user}]. Reason: [{reason}]\n" +
-                    $"```");
+                    $"[{contextUser}] banned [{user}]. Reason: [{reason}]```");
             }
         }
 
@@ -172,8 +170,7 @@ namespace CWSBot.Modules.Public
                 await Context.Guild.RemoveBanAsync(user);
                 SocketTextChannel logChannel = (Context.Guild as SocketGuild).TextChannels.FirstOrDefault(x => x.Name == "mod_logs");
                 await logChannel.SendMessageAsync($"```ini\n" +
-                    $"[{contextUser}] softbanned [{user}]. Reason: [{reason}]\n" +
-                    $"```");
+                    $"[{contextUser}] softbanned [{user}]. Reason: [{reason}]```");
             }
         }
     }
