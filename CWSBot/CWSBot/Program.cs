@@ -46,7 +46,7 @@ namespace CWSBot
             await Task.Delay(-1);
         }
 
-        private Task UserLeft(SocketGuildUser arg)
+        /*private Task UserLeft(SocketGuildUser arg)
         {
             //SET GUILD, USER AND GENERAL CHANNEL
             var guild = client.GetGuild(351284764352839690);
@@ -66,6 +66,35 @@ namespace CWSBot
 
             Database.RemoveUser(arg);
             return Task.CompletedTask;
+        }*/
+
+        public async Task AccountJoined(SocketGuildUser user)
+        {
+            SocketTextChannel welcomeChannelPublic = user.Guild.TextChannels.FirstOrDefault(x => x.Name == "offtopic_discussions");
+            SocketTextChannel welcomeChannelMod = user.Guild.TextChannels.FirstOrDefault(x => x.Name == "cwsbot_reports");
+            SocketRole learningRole = user.Guild.Roles.FirstOrDefault(x => x.Name == "Learning");
+            SocketRole botsRole = user.Guild.Roles.FirstOrDefault(x => x.Name == "Bots");
+
+            string userDetails = "";
+            string roleAddedText = "";
+            
+            userDetails = string.Format("**{0}**{1}", user.Username, user.IsBot ? " bot has" : string.Empty);
+            roleAddedText = user.IsBot ? botsRole.Mention : learningRole.Mention;
+            await user.AddRoleAsync(user.IsBot ? botsRole : learningRole);
+
+            string welcomeText = userDetails + " joined the server!";
+            roleAddedText += " has been assigned to **" + user.Username + "!**";
+
+            await welcomeChannelMod.SendMessageAsync(welcomeText);
+            await welcomeChannelPublic.SendMessageAsync(welcomeText);
+            await welcomeChannelMod.SendMessageAsync(roleAddedText);
+        }
+
+        public async Task AccountLeft(SocketGuildUser user)
+        {
+            SocketTextChannel goodbyeChannelMod = user.Guild.TextChannels.FirstOrDefault(x => x.Name == "cwsbot_reports");
+
+            await goodbyeChannelMod.SendMessageAsync("**" + user.Username + "**" + " left the server!");
         }
 
         private IServiceProvider ConfigureServices()
