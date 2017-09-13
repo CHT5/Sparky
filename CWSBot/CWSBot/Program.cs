@@ -32,8 +32,8 @@ namespace CWSBot
 
             client.Log += Log;
             commands.Log += Log;
-            client.UserLeft += UserLeft;
-            client.UserJoined += UserJoined;
+            //client.UserLeft += UserLeft;
+            //client.UserJoined += UserJoined;
             string token = BotConfig.Load().Token;
 
             await InstallCommands();
@@ -123,7 +123,7 @@ namespace CWSBot
         public async Task OnConnected()
         {
             //Set game status.
-            await client.SetGameAsync(prefixstring + "help with help");
+            await client.SetGameAsync(BotConfig.Load().Prefix + "help with help");
         }
         
         public async Task HandleCommand(SocketMessage messageParam)
