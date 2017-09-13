@@ -75,15 +75,15 @@ namespace CWSBot
             SocketRole learningRole = user.Guild.Roles.FirstOrDefault(x => x.Name == "Learning");
             SocketRole botsRole = user.Guild.Roles.FirstOrDefault(x => x.Name == "Bots");
 
-            string userDetails = "";
+            string userDetails = "```ini\n ";
             string roleAddedText = "";
             
-            userDetails = string.Format("**{0}**{1}", user.Username, user.IsBot ? " bot has" : string.Empty);
-            roleAddedText = user.IsBot ? botsRole.Mention : learningRole.Mention;
+            userDetails += string.Format("**{0}**{1}", user.Username, user.IsBot ? " bot has" : string.Empty);
+            roleAddedText = "```inin\ [" + user.IsBot ? botsRole.Mention : learningRole.Mention;
             await user.AddRoleAsync(user.IsBot ? botsRole : learningRole);
 
-            string welcomeText = userDetails + " joined the server!";
-            roleAddedText += " has been assigned to **" + user.Username + "!**";
+            string welcomeText = userDetails + " joined the server!```";
+            roleAddedText += $"] has been assigned to [{user.Username}] !```";
 
             await welcomeChannelMod.SendMessageAsync(welcomeText);
             await welcomeChannelPublic.SendMessageAsync(welcomeText);
@@ -94,7 +94,7 @@ namespace CWSBot
         {
             SocketTextChannel goodbyeChannelMod = user.Guild.TextChannels.FirstOrDefault(x => x.Name == "cwsbot_reports");
 
-            await goodbyeChannelMod.SendMessageAsync("**" + user.Username + "**" + " left the server!");
+            await goodbyeChannelMod.SendMessageAsync($"```ini\n [{user.Username}] left the server!```");
         }
 
         private IServiceProvider ConfigureServices()
