@@ -76,10 +76,10 @@ namespace CWSBot
             SocketRole botsRole = user.Guild.Roles.FirstOrDefault(x => x.Name == "Bots");
 
             string userDetails = "```ini\n ";
-            string roleAddedText = "";
+            string roleAddedText = "```ini\n [";
             
-            userDetails += string.Format("**{0}**{1}", user.Username, user.IsBot ? " bot has" : string.Empty);
-            roleAddedText = "```inin\ [" + user.IsBot ? botsRole.Mention : learningRole.Mention;
+            userDetails += string.Format("[{0}]{1}", user.Username, user.IsBot ? " bot has" : string.Empty);
+            roleAddedText = user.IsBot ? botsRole.Mention : learningRole.Mention;
             await user.AddRoleAsync(user.IsBot ? botsRole : learningRole);
 
             string welcomeText = userDetails + " joined the server!```";
