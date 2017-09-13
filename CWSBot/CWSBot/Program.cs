@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using CWSBot.Config;
 using System.IO;
-using Discord.Addons.InteractiveCommands;
 using CWSBot;
 using System.Linq;
 
@@ -73,7 +72,6 @@ namespace CWSBot
         {
             var services = new ServiceCollection()
                 .AddSingleton(client)
-                .AddSingleton<InteractiveService>()
             //.AddSingleton<AudioService>() remove Slashes if you have audio
                 .AddSingleton(new CommandService(new CommandServiceConfig
                 {

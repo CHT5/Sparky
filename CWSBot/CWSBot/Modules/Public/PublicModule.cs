@@ -6,12 +6,13 @@ using Discord.Commands;
 using Microsoft.Extensions.DependencyInjection;
 using System.Linq;
 using CWSBot.Config;
+using System.Diagnostics;
 
 namespace CWSBot.Modules.Public
 {
     public class PublicModule : ModuleBase<SocketCommandContext>
     {
-
+        EasyEmbed embedInfo = new EasyEmbed();
         private CommandService _service;
         public PublicModule(CommandService service)
         {
@@ -55,101 +56,26 @@ namespace CWSBot.Modules.Public
             await dmChannel.SendMessageAsync("", false, builder.Build());
         }
 
-        [Command("status")]
-        [Alias("s")]
-        [Remarks("Shows the specified user's status")]
-        public async Task Status(IUser user = null)
+        [Command("info")]
+        public async Task BotInfo()
         {
-            if (user == null)
+            var application = await Context.Client.GetApplicationInfoAsync();  /*for lib version*/
+            var icon_Info = application.IconUrl;
+            var icon_Support = "http://cdn2.hubspot.net/hub/423318/file-2015757038-png/Graphics/Benefits/vControl-Icon-Large_Helpdesk.png";
+            var embed_Colour = EasyEmbed.EmbedColour.Red; //SEE THE "EasyEmbed.cs" CLASS FOR THE LIST OF AVAILABLE COLOURS.
+
+
+            using (var process = Process.GetCurrentProcess())
             {
-                user = Context.User;
+                var time = DateTime.Now - process.StartTime;
+
+
+                embedInfo.createFooterEmbed(embed_Colour, $"{application.Name} Status", $"**Owner: ** {application.Owner.Mention}\n" +
+                    $"**Discord lib version: **{DiscordConfig.Version}\n" +
+                    $"**Guilds: **{(Context.Client as DiscordSocketClient).Guilds.Count.ToString()}  **Channels: **{(Context.Client as DiscordSocketClient).Guilds.Sum(g => g.Channels.Count).ToString()}  **Users: **{(Context.Client as DiscordSocketClient).Guilds.Sum(g => g.Users.Count).ToString()}\n" +
+                    $"**Uptime: **{time.ToString(@"dd\.hh\:mm\:ss")}", icon_Info, $"For issues with, or questions about the bot, please refer to the staff", icon_Support);
             }
-            await ReplyAsync("stuff");
-        }
-
-        //SELF-SPECIFIED NON-STATIC COMMANDS
-        [Command("addrole")] //Command Name
-        [Remarks("Adds a specific role of choice")] //Summary for your command. it will not add anything.
-        public async Task AddRole(SocketRole roleChoice)
-        {
-            //SET User and Guild
-            var guild = Context.Client.GetGuild(351284764352839690);
-            var user = guild.GetUser(Context.User.Id);
-
-            
-
-            //SPECIFIC GAMING CHANNELS
-            if (roleChoice.Name == "league")
-            {
-                var roleName = "Game_League";
-                var channel = guild.Channels.FirstOrDefault(xc => xc.Name == "league-of-legends") as SocketTextChannel;
-
-                var userRoles = user.Roles.FirstOrDefault(has => has.Name.ToUpper() == roleName.ToUpper());
-                if(userRoles == null)
-                {
-                    await user.AddRoleAsync(roleChoice);
-                    await channel.SendMessageAsync($"{user.Mention}, welcome to the {channel.Name} channel!");
-                }
-                else
-                {
-                    await ReplyAsync($"{user.Mention}, you already have the specified role!");
-                }
-                return;
-            }
-            if (roleChoice.Name == "ow")
-            {
-                var roleName = "Game_Overwatch";
-                var channel = guild.Channels.FirstOrDefault(xc => xc.Name == "overwatch") as SocketTextChannel;
-
-                var userRoles = user.Roles.FirstOrDefault(has => has.Name.ToUpper() == roleName.ToUpper());
-                if (userRoles == null)
-                {
-                    await user.AddRoleAsync(roleChoice);
-                    await channel.SendMessageAsync($"{user.Mention}, welcome to the {channel.Name} channel!");
-                }
-                else
-                {
-                    await ReplyAsync($"{user.Mention}, you already have the specified role!");
-                }
-                return;
-            }
-
-            //SPECIFIC PROGRAMMING CHANNELS
-            if (roleChoice.Name == "csharp")
-            {
-                var roleName = "Coding_CSharp";
-                var channel = guild.Channels.FirstOrDefault(xc => xc.Name == "csharp") as SocketTextChannel;
-
-                var userRoles = user.Roles.FirstOrDefault(has => has.Name.ToUpper() == roleName.ToUpper());
-                if (userRoles == null)
-                {
-                    await user.AddRoleAsync(roleChoice);
-                    await channel.SendMessageAsync($"{user.Mention}, welcome to the {channel.Name} channel!");
-                }
-                else
-                {
-                    await ReplyAsync($"{user.Mention}, you already have the specified role!");
-                }
-                return;
-            }
-            if (roleChoice.Name == "js")
-            {
-                var roleName = "Coding_JScript";
-                var channel = guild.Channels.FirstOrDefault(xc => xc.Name == "javascript") as SocketTextChannel;
-
-                var userRoles = user.Roles.FirstOrDefault(has => has.Name.ToUpper() == roleName.ToUpper());
-                if (userRoles == null)
-                {
-                    await user.AddRoleAsync(roleChoice);
-                    await channel.SendMessageAsync($"{user.Mention}, welcome to the {channel.Name} channel!");
-                }
-                else
-                {
-                    await ReplyAsync($"{user.Mention}, you already have the specified role!");
-                }
-                return;
-            }
-            await ReplyAsync($"{Context.User.Mention}, no such role exists!");
+            await embedInfo.sendEmbed(Context);
         }
 
         //USER-SPECIFIED COMMANDS

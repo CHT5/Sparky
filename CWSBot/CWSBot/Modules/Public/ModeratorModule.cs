@@ -23,8 +23,7 @@ namespace CWSBot.Modules.Public
         [RequireUserPermission(GuildPermission.ManageMessages)]
         public async Task PruneMessages(int prune = 0)
         {
-            var guild = Context.Client.GetGuild(351284764352839690);
-            var user = guild.GetUser(Context.User.Id);
+            var user = Context.Guild.GetUser(Context.User.Id);
 
             if (prune == 0)
             {
@@ -35,7 +34,7 @@ namespace CWSBot.Modules.Public
                 var items = await Context.Channel.GetMessagesAsync(prune).Flatten();
                 await Context.Channel.DeleteMessagesAsync(items);
 
-                var channel = guild.Channels.FirstOrDefault(xc => xc.Name == "mod-logs") as SocketTextChannel;
+                var channel = Context.Guild.Channels.FirstOrDefault(xc => xc.Name == "mod-logs") as SocketTextChannel;
 
                 await channel.SendMessageAsync($"```ini\n" +
                     $"[{Context.User.Username}] pruned [{prune}] message(s) in [{Context.Channel.Name}]```");
@@ -47,8 +46,6 @@ namespace CWSBot.Modules.Public
         [RequireUserPermission(GuildPermission.ManageMessages)]
         public async Task PruneUser(IUser user, int prune = 0)
         {
-            var guild = Context.Client.GetGuild(351284764352839690);
-
             if (prune == 0)
             {
                 await ReplyAsync($"{Context.User.Mention}, please add the amount of messages to be pruned!\n *!prune x*");
@@ -59,7 +56,7 @@ namespace CWSBot.Modules.Public
                 var usermessages = Items.Where(x => x.Author == user).Take(prune);
                 await Context.Channel.DeleteMessagesAsync(usermessages);
 
-                var channel = guild.Channels.FirstOrDefault(xc => xc.Name == "mod-logs") as SocketTextChannel;
+                var channel = Context.Guild.Channels.FirstOrDefault(xc => xc.Name == "mod-logs") as SocketTextChannel;
                 await channel.SendMessageAsync($"```ini\n" +
                     $"[{Context.User.Username}] pruned [{prune}] message(s) in [{Context.Channel.Name}] from [{user}]```");
             }
