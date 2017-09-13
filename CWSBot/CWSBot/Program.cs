@@ -79,7 +79,7 @@ namespace CWSBot
             string roleAddedText = "```ini\n [";
             
             userDetails += string.Format("[{0}]{1}", user.Username, user.IsBot ? " bot has" : string.Empty);
-            roleAddedText = user.IsBot ? botsRole.Mention : learningRole.Mention;
+            roleAddedText = user.IsBot ? botsRole : learningRole;
             await user.AddRoleAsync(user.IsBot ? botsRole : learningRole);
 
             string welcomeText = userDetails + " joined the server!```";
