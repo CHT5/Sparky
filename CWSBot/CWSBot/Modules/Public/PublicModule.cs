@@ -70,12 +70,12 @@ namespace CWSBot.Modules.Public
                 var time = DateTime.Now - process.StartTime;
 
 
-                embedInfo.createFooterEmbed(embed_Colour, $"{application.Name} Status", $"**Owner: ** {application.Owner.Mention}\n" +
+                embedInfo.CreateFooterEmbed(embed_Colour, $"{application.Name} Status", $"**Owner: ** {application.Owner.Mention}\n" +
                     $"**Discord lib version: **{DiscordConfig.Version}\n" +
                     $"**Guilds: **{(Context.Client as DiscordSocketClient).Guilds.Count.ToString()}  **Channels: **{(Context.Client as DiscordSocketClient).Guilds.Sum(g => g.Channels.Count).ToString()}  **Users: **{(Context.Client as DiscordSocketClient).Guilds.Sum(g => g.Users.Count).ToString()}\n" +
                     $"**Uptime: **{time.ToString(@"dd\.hh\:mm\:ss")}", icon_Info, $"For issues with, or questions about the bot, please refer to the staff", icon_Support);
             }
-            await embedInfo.sendEmbed(Context);
+            await embedInfo.SendEmbed(Context);
         }
 
         //USER-SPECIFIED COMMANDS

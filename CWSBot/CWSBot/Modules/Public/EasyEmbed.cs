@@ -32,9 +32,9 @@ namespace CWSBot.Modules.Public
         };
 
         //CREATING A BASIC EMBED!
-        public void createBasicEmbed(EmbedColour colour, string title = null, string description = null, string thumbnailurl = null)
+        public void CreateBasicEmbed(EmbedColour colour, string title = null, string description = null, string thumbnailurl = null)
         {
-            var setColour = getEmbedColour(colour);
+            var setColour = GetEmbedColour(colour);
             embed.WithColor(setColour);
             if (title != null && title != "none") { embed.WithTitle(title); }
             if (description != null && description != "none") { embed.WithDescription(description); }
@@ -42,9 +42,9 @@ namespace CWSBot.Modules.Public
         }
 
         //CREATING A BASIC EMBED WITH FOOTER SUPPORT!
-        public void createFooterEmbed(EmbedColour colour, string title = null, string description = null, string thumbnailurl = null, string footer_text = null, string footer_thumbnail = null)
+        public void CreateFooterEmbed(EmbedColour colour, string title = null, string description = null, string thumbnailurl = null, string footer_text = null, string footer_thumbnail = null)
         {
-            var setColour = getEmbedColour(colour);
+            var setColour = GetEmbedColour(colour);
             embed.WithColor(setColour);
 
             if (title != null && title != "none") { embed.WithTitle(title); }
@@ -68,13 +68,13 @@ namespace CWSBot.Modules.Public
         }
 
         //ACTUALLY SENDING THE EMBED!
-        public async Task sendEmbed(ICommandContext context)
+        public async Task SendEmbed(ICommandContext context)
         {
             await context.Channel.SendMessageAsync("", false, embed.Build());
         }
 
         //SETTING THE COLOUR OF THE EMBED!
-        private Color getEmbedColour(EmbedColour clr)
+        private Color GetEmbedColour(EmbedColour clr)
         {
             embed = new EmbedBuilder();
 
