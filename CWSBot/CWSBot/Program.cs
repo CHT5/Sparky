@@ -141,7 +141,7 @@ namespace CWSBot
             var result = await commands.ExecuteAsync(context, argPos, _provider);
 
             if (!result.IsSuccess)
-                await context.Channel.SendMessageAsync(result.ErrorReason);
+                Console.WriteLine(result.ErrorReason);
         }
 
 
