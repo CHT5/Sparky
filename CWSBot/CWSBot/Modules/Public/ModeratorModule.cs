@@ -34,7 +34,7 @@ namespace CWSBot.Modules.Public
                 var items = await Context.Channel.GetMessagesAsync(prune).Flatten();
                 await Context.Channel.DeleteMessagesAsync(items);
 
-                var channel = Context.Guild.Channels.FirstOrDefault(xc => xc.Name == "mod-logs") as SocketTextChannel;
+                var channel = Context.Guild.Channels.FirstOrDefault(xc => xc.Name == "mod_logs") as SocketTextChannel;
 
                 await channel.SendMessageAsync($"```ini\n" +
                     $"[{Context.User.Username}] pruned [{prune}] message(s) in [{Context.Channel.Name}]```");
@@ -56,13 +56,13 @@ namespace CWSBot.Modules.Public
                 var usermessages = Items.Where(x => x.Author == user).Take(prune);
                 await Context.Channel.DeleteMessagesAsync(usermessages);
 
-                var channel = Context.Guild.Channels.FirstOrDefault(xc => xc.Name == "mod-logs") as SocketTextChannel;
+                var channel = Context.Guild.Channels.FirstOrDefault(xc => xc.Name == "mod_logs") as SocketTextChannel;
                 await channel.SendMessageAsync($"```ini\n" +
                     $"[{Context.User.Username}] pruned [{prune}] message(s) in [{Context.Channel.Name}] from [{user}]```");
             }
         }
 
-        [Command("warn")]
+        /*[Command("warn")]
         [Remarks("warns a specified user and deducts point(s) of rep.")]
         [RequireUserPermission(GuildPermission.ManageMessages)]
         public async Task WarnUser(IUser user = null, [Remainder] String reason = null)
@@ -90,9 +90,42 @@ namespace CWSBot.Modules.Public
 
             //MODLOG STUFF
             var guild = Context.Client.GetGuild(351284764352839690);
-            var channel = guild.Channels.FirstOrDefault(xc => xc.Name == "mod-logs") as SocketTextChannel;
+            var channel = guild.Channels.FirstOrDefault(xc => xc.Name == "mod_logs") as SocketTextChannel;
             await channel.SendMessageAsync($"```ini\n" +
                 $"[{Context.User.Username}] warned [{user.Username}], reason: [{reason}], resulting in the loss of [-{karmaReduction}] karma```");
+        }*/
+        
+        [Command("warn", RunMode = RunMode.Async)]
+        [Summary("Warns a specified user, and kicks if user has a certain role when adding a warn.")]
+        public async Task warnSystem(IGuildUser user, [Remainder] string reason)
+        {
+            SocketTextChannel logChannel = (Context.Guild as SocketGuild).TextChannels.FirstOrDefault(x => x.Name == "mod_logs");
+            await Context.Message.DeleteAsync();
+            var GuildUser = await Context.Guild.GetUserAsync(Context.User.Id);
+            if (!GuildUser.GuildPermissions.KickMembers)
+            {
+                //await Context.Channel.SendMessageAsync("Sorry, but Sparky finds you do not have enough permissions to warn users.");
+                return;
+            }
+            SocketGuildUser socketUser = user as SocketGuildUser;
+            if (socketUser.Roles.Contains(Context.Guild.Roles.FirstOrDefault(x => x.Name == "Yellow Card Issued!")))
+            {
+                await user.KickAsync(reason);
+                await logChannel.SendMessageAsync($"```\n [{user.Username}] has been kicked for [{reason}] while having Yellow Card Issued!```");
+            }
+            else
+            {
+                if (socketUser.Roles.Contains(Context.Guild.Roles.FirstOrDefault(x => x.Name == "Warning Issued!")))
+                {
+                    await user.AddRoleAsync(Context.Guild.Roles.FirstOrDefault(x => x.Name == "Yellow Card Issued!"));
+                    await logChannel.SendMessageAsync($"```ini\n Yellow Card Issued! role added to [{user.Username}] for [{reason}].```");
+                }
+                else
+                {
+                    await user.AddRoleAsync(Context.Guild.Roles.FirstOrDefault(x => x.Name == "Warning Issued!"));
+                    await logChannel.SendMessageAsync($"```ini\n Warning Issued! role added to [{user.Username}] for [{reason}].```");
+                }
+            }
         }
         
         [Command("kick")]
