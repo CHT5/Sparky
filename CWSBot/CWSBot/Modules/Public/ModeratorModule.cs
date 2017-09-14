@@ -101,7 +101,7 @@ namespace CWSBot.Modules.Public
         {
             SocketTextChannel logChannel = (Context.Guild as SocketGuild).TextChannels.FirstOrDefault(x => x.Name == "mod_logs");
             await Context.Message.DeleteAsync();
-            var GuildUser = Context.Guild.GetUserAsync(Context.User.Id);
+            var GuildUser = (Context.Guild as SocketGuild).GetUser(Context.User.Id);
             if (!GuildUser.GuildPermissions.KickMembers)
             {
                 //await Context.Channel.SendMessageAsync("Sorry, but Sparky finds you do not have enough permissions to warn users.");
