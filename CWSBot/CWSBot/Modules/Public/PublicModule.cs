@@ -7,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using System.Linq;
 using CWSBot.Config;
 using System.Diagnostics;
+using CWSBot.Interaction;
 
 namespace CWSBot.Modules.Public
 {
@@ -14,9 +15,11 @@ namespace CWSBot.Modules.Public
     {
         EasyEmbed embedInfo = new EasyEmbed();
         private CommandService _service;
-        public PublicModule(CommandService service)
+        private CwsContext _dctx;
+        public PublicModule(CommandService service, CwsContext dctx)
         {
             _service = service;
+            _dctx = dctx;
         }
         
         //BASIC STATIC COMMANDS
@@ -88,28 +91,30 @@ namespace CWSBot.Modules.Public
                 await ReplyAsync($"{Context.User.Mention}, you need to specify a user to give karma!");
                 return;
             }
-            var givingUserStatus = Database.GetUserStatus(Context.User);
-            var receivingUserSTatus = Database.GetUserStatus(user);
-            TimeSpan diff = DateTime.Now - givingUserStatus.FirstOrDefault().karmaParticipation;
+            var givingUserStatus = _dctx.Users.SingleOrDefault(x => x.UserId == Context.User.Id);
+            var receivingUserSTatus = _dctx.Users.SingleOrDefault(x => x.UserId == user.Id);
+
+            TimeSpan diff = DateTime.Now - givingUserStatus.KarmaTime;
 
             if (diff.Days < 1)
             {
                 await ReplyAsync($"{Context.User.Mention}, you need to wait {23 - diff.Hours}h{60 - diff.Minutes}m before you can give karma to someone!");
                 return;
             }
-            diff = DateTime.Now - receivingUserSTatus.FirstOrDefault().karmaParticipation;
+            diff = DateTime.Now - receivingUserSTatus.KarmaTime;
             if (diff.Days < 1)
             {
                 await ReplyAsync($"{Context.User.Mention}, the specified user needs to wait {23 - diff.Hours}h{60 - diff.Minutes}m before he/she can receive karma again.");
                 return;
             }
             int warningCounter = -1;
-            if(receivingUserSTatus.FirstOrDefault().warningCount < 1)
+            if(receivingUserSTatus.WarningCount < 1)
             {
                 warningCounter = 0;
             }
-            Database.RepDateChange(Context.User);
-            Database.RepUser(user, warningCounter);
+            givingUserStatus.KarmaTime = DateTimeOffset.Now;
+            receivingUserSTatus.WarningCount += warningCounter;
+            receivingUserSTatus.Karma++;
             await ReplyAsync($"{Context.User.Mention} just gave {user} +1 karma!");
         }
     }

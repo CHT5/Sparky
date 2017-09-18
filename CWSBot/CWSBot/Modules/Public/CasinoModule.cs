@@ -1,4 +1,5 @@
-﻿using Discord.Commands;
+﻿using CWSBot.Interaction;
+using Discord.Commands;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,6 +11,13 @@ namespace CWSBot.Modules.Public
 {
     public class CasinoModule : ModuleBase<SocketCommandContext>
     {
+        private CwsContext _dctx;
+
+        public CasinoModule(CwsContext dctx)
+        {
+            _dctx = dctx;
+        }
+
         EasyEmbed embed_registration = new EasyEmbed();
 
         [Command("gamble", RunMode = RunMode.Async)]
@@ -17,11 +25,11 @@ namespace CWSBot.Modules.Public
         [Remarks("Rolls two dice, based on the number you roll you will either win or lose tokens.")]
         public async Task Gamble(double stakes)
         {
-            var userMoney = Database.GetUserStatus(Context.User);
-            if (userMoney.FirstOrDefault().liteTokens < stakes)
+            var userMoney = _dctx.Users.SingleOrDefault(x => x.UserId == Context.User.Id);
+            if (userMoney.Tokens < stakes)
             {
-                await ReplyAsync($"(GambleDragon) :dragon_face:: {Context.User.Mention}, you're missing {stakes - userMoney.FirstOrDefault().liteTokens} tokens to do that!\n" +
-                    $"(Your current tokens: {userMoney.FirstOrDefault().liteTokens})!");
+                await ReplyAsync($"(GambleDragon) :dragon_face:: {Context.User.Mention}, you're missing {stakes - userMoney.Tokens} tokens to do that!\n" +
+                    $"(Your current tokens: {userMoney.Tokens})!");
                 return;
             }
             if (stakes < 1 || stakes > 50)
@@ -86,7 +94,9 @@ namespace CWSBot.Modules.Public
 
             }
             int profitResult = Convert.ToInt32(stakes + pointResult);
-            Database.TokenChange(Context.User, profitResult);
+
+            userMoney.Tokens -= Convert.ToUInt32(profitResult);
+            _dctx.SaveChanges();
             await ReplyAsync(rollResultText);
         }
     }
