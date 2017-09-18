@@ -35,6 +35,7 @@ namespace CWSBot
             commands.Log += Log;
             //client.UserLeft += UserLeft;
             //client.UserJoined += UserJoined;
+            client.MessageReceived += Client_MessageReceived;
             string token = BotConfig.Load().Token;
 
             await InstallCommands();
@@ -45,6 +46,40 @@ namespace CWSBot
             await client.StartAsync();
 
             await Task.Delay(-1);
+        }
+
+        private async Task Client_MessageReceived(SocketMessage arg)
+        {
+            await Task.Factory.StartNew(() => MessageReceivedHandler(arg));
+        }
+
+        private void MessageReceivedHandler(SocketMessage arg)
+        {
+            using (var dctx = new CwsContext())
+            {
+                User DbUser = dctx.Users.SingleOrDefault(x => x.UserId == arg.Author.Id);
+
+                if(DbUser is null)
+                {
+                    User NewDbUser = new User
+                    {
+                        UserId = arg.Author.Id,
+                        Karma = 0,
+                        WarningCount = 0,
+                        MessageCount = 1,
+                        Tokens = 0,
+                        KarmaTime = DateTimeOffset.Now.AddDays(-1),
+                        Username = arg.Author.Username
+                    };
+                    dctx.Add(NewDbUser);
+                    dctx.SaveChanges();
+                    return;
+                }
+
+                DbUser.MessageCount++;
+                dctx.SaveChanges();
+                return;
+            }
         }
 
         /*private Task UserLeft(SocketGuildUser arg)
@@ -133,6 +168,7 @@ namespace CWSBot
             var message = messageParam as SocketUserMessage;
 
             if (message == null) return;
+            if (message.Author.IsBot == true) return;
 
             int argPos = 1;
 
