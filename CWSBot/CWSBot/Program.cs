@@ -9,6 +9,7 @@ using CWSBot.Config;
 using System.IO;
 using CWSBot;
 using System.Linq;
+using CWSBot.Interaction;
 
 namespace CWSBot
 {
@@ -102,6 +103,7 @@ namespace CWSBot
             var services = new ServiceCollection()
                 .AddSingleton(client)
             //.AddSingleton<AudioService>() remove Slashes if you have audio
+                .AddDbContext<CwsContext>()
                 .AddSingleton(new CommandService(new CommandServiceConfig
                 {
                     CaseSensitiveCommands = false
