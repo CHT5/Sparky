@@ -14,8 +14,10 @@ namespace CWSBot.Modules.Public
     public class PublicModule : ModuleBase<SocketCommandContext>
     {
         EasyEmbed embedInfo = new EasyEmbed();
+
         private CommandService _service;
         private CwsContext _dctx;
+
         public PublicModule(CommandService service, CwsContext dctx)
         {
             _service = service;
@@ -38,25 +40,18 @@ namespace CWSBot.Modules.Public
 
             foreach (var module in _service.Modules)
             {
-                string description = null;
-                foreach (var cmd in module.Commands)
-                {
-                    var result = await cmd.CheckPreconditionsAsync(Context);
-                    if (result.IsSuccess)
-                        description += $"{prefix}{cmd.Aliases.First()}\n";
-                }
+                var description = string.Join("\n", module.Commands.Where(c => c.CheckPreconditionsAsync(Context).Result.IsSuccess).Select(c => $"{prefix}{c.Aliases.First()}"));
 
                 if (!string.IsNullOrWhiteSpace(description))
-                {
                     builder.AddField(x =>
                     {
                         x.Name = module.Name;
                         x.Value = description;
                         x.IsInline = false;
                     });
-                }
             }
-            await dmChannel.SendMessageAsync("", false, builder.Build());
+
+            await dmChannel.SendMessageAsync("", embed: builder.Build());
         }
 
         [Command("info")]
@@ -66,18 +61,17 @@ namespace CWSBot.Modules.Public
             var icon_Info = application.IconUrl;
             var icon_Support = "http://cdn2.hubspot.net/hub/423318/file-2015757038-png/Graphics/Benefits/vControl-Icon-Large_Helpdesk.png";
             var embed_Colour = EasyEmbed.EmbedColour.Red; //SEE THE "EasyEmbed.cs" CLASS FOR THE LIST OF AVAILABLE COLOURS.
-
-
+            
             using (var process = Process.GetCurrentProcess())
             {
-                var time = DateTime.Now - process.StartTime;
-
+                var upTime = DateTime.Now - process.StartTime;
 
                 embedInfo.CreateFooterEmbed(embed_Colour, $"{application.Name} Status", $"**Owner: ** {application.Owner.Mention}\n" +
                     $"**Discord lib version: **{DiscordConfig.Version}\n" +
                     $"**Guilds: **{(Context.Client as DiscordSocketClient).Guilds.Count.ToString()}  **Channels: **{(Context.Client as DiscordSocketClient).Guilds.Sum(g => g.Channels.Count).ToString()}  **Users: **{(Context.Client as DiscordSocketClient).Guilds.Sum(g => g.Users.Count).ToString()}\n" +
-                    $"**Uptime: **{time.ToString(@"dd\.hh\:mm\:ss")}", icon_Info, $"For issues with, or questions about the bot, please refer to the staff", icon_Support);
+                    $"**Uptime: **{upTime.ToString(@"dd\.hh\:mm\:ss")}", icon_Info, $"For issues with, or questions about the bot, please refer to the staff", icon_Support);
             }
+
             await embedInfo.SendEmbed(Context);
         }
 
@@ -91,30 +85,31 @@ namespace CWSBot.Modules.Public
                 await ReplyAsync($"{Context.User.Mention}, you need to specify a user to give karma!");
                 return;
             }
+
             var givingUserStatus = _dctx.Users.SingleOrDefault(x => x.UserId == Context.User.Id);
-            var receivingUserSTatus = _dctx.Users.SingleOrDefault(x => x.UserId == user.Id);
+            var receivingUserStatus = _dctx.Users.SingleOrDefault(x => x.UserId == user.Id);
 
             TimeSpan diff = DateTime.Now - givingUserStatus.KarmaTime;
-
             if (diff.Days < 1)
             {
                 await ReplyAsync($"{Context.User.Mention}, you need to wait {23 - diff.Hours}h{60 - diff.Minutes}m before you can give karma to someone!");
                 return;
             }
-            diff = DateTime.Now - receivingUserSTatus.KarmaTime;
+
+            diff = DateTime.Now - receivingUserStatus.KarmaTime;
             if (diff.Days < 1)
             {
                 await ReplyAsync($"{Context.User.Mention}, the specified user needs to wait {23 - diff.Hours}h{60 - diff.Minutes}m before he/she can receive karma again.");
                 return;
             }
-            int warningCounter = -1;
-            if(receivingUserSTatus.WarningCount < 1)
-            {
-                warningCounter = 0;
-            }
+
+            int warningCounter = receivingUserStatus.WarningCount < 1 ? 0 : -1;
+
             givingUserStatus.KarmaTime = DateTimeOffset.Now;
-            receivingUserSTatus.WarningCount += warningCounter;
-            receivingUserSTatus.Karma++;
+
+            receivingUserStatus.WarningCount += warningCounter;
+            receivingUserStatus.Karma++;
+
             await ReplyAsync($"{Context.User.Mention} just gave {user} +1 karma!");
         }
     }

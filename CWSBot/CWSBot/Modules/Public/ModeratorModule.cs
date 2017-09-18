@@ -23,19 +23,14 @@ namespace CWSBot.Modules.Public
         [RequireUserPermission(GuildPermission.ManageMessages)]
         public async Task PruneMessages(int prune = 0)
         {
-            var user = Context.Guild.GetUser(Context.User.Id);
-
             if (prune == 0)
-            {
                 await ReplyAsync($"{Context.User.Mention}, please add the amount of messages to be pruned!\n *!prune x*");
-            }
             else
             {
-                var items = await Context.Channel.GetMessagesAsync(prune).Flatten();
-                await Context.Channel.DeleteMessagesAsync(items);
+                var messages = await Context.Channel.GetMessagesAsync(prune).Flatten();
+                await Context.Channel.DeleteMessagesAsync(messages);
 
                 var channel = Context.Guild.Channels.FirstOrDefault(xc => xc.Name == "mod_logs") as SocketTextChannel;
-
                 await channel.SendMessageAsync($"```ini\n" +
                     $"[{Context.User.Username}] pruned [{prune}] message(s) in [{Context.Channel.Name}]```");
             }
@@ -52,8 +47,8 @@ namespace CWSBot.Modules.Public
             }
             else
             {
-                var Items = await Context.Channel.GetMessagesAsync().Flatten();
-                var usermessages = Items.Where(x => x.Author == user).Take(prune);
+                var messages = await Context.Channel.GetMessagesAsync().Flatten();
+                var usermessages = messages.Where(x => x.Author == user).Take(prune);
                 await Context.Channel.DeleteMessagesAsync(usermessages);
 
                 var channel = Context.Guild.Channels.FirstOrDefault(xc => xc.Name == "mod_logs") as SocketTextChannel;
@@ -100,31 +95,31 @@ namespace CWSBot.Modules.Public
         public async Task warnSystem(IGuildUser user, [Remainder] string reason)
         {
             SocketTextChannel logChannel = (Context.Guild as SocketGuild).TextChannels.FirstOrDefault(x => x.Name == "mod_logs");
+
             await Context.Message.DeleteAsync();
+
             var GuildUser = (Context.Guild as SocketGuild).GetUser(Context.User.Id);
             if (!GuildUser.GuildPermissions.KickMembers)
             {
                 //await Context.Channel.SendMessageAsync("Sorry, but Sparky finds you do not have enough permissions to warn users.");
                 return;
             }
-            SocketGuildUser socketUser = user as SocketGuildUser;
-            if (socketUser.Roles.Contains(Context.Guild.Roles.FirstOrDefault(x => x.Name == "Yellow Card Issued!")))
+
+            SocketGuildUser guildUser = user as SocketGuildUser;
+            if (guildUser.Roles.Any(r => r.Name == "Yellow Card Issued!"))
             {
                 await user.KickAsync(reason);
                 await logChannel.SendMessageAsync($"```\n [{user.Username}] has been kicked for [{reason}] while having Yellow Card Issued!```");
             }
+            else if (guildUser.Roles.Any(r => r.Name == "Warning Issued!"))
+            {
+                await user.AddRoleAsync(Context.Guild.Roles.FirstOrDefault(x => x.Name == "Yellow Card Issued!"));
+                await logChannel.SendMessageAsync($"```ini\n Yellow Card Issued! role added to [{user.Username}] for [{reason}].```");
+            }
             else
             {
-                if (socketUser.Roles.Contains(Context.Guild.Roles.FirstOrDefault(x => x.Name == "Warning Issued!")))
-                {
-                    await user.AddRoleAsync(Context.Guild.Roles.FirstOrDefault(x => x.Name == "Yellow Card Issued!"));
-                    await logChannel.SendMessageAsync($"```ini\n Yellow Card Issued! role added to [{user.Username}] for [{reason}].```");
-                }
-                else
-                {
-                    await user.AddRoleAsync(Context.Guild.Roles.FirstOrDefault(x => x.Name == "Warning Issued!"));
-                    await logChannel.SendMessageAsync($"```ini\n Warning Issued! role added to [{user.Username}] for [{reason}].```");
-                }
+                await user.AddRoleAsync(Context.Guild.Roles.FirstOrDefault(x => x.Name == "Warning Issued!"));
+                await logChannel.SendMessageAsync($"```ini\n Warning Issued! role added to [{user.Username}] for [{reason}].```");
             }
         }
         
@@ -133,12 +128,10 @@ namespace CWSBot.Modules.Public
         public async Task Kick(IGuildUser user, [Remainder] string reason)
         {
             // stores context user as a guild user
-            var contextUser = Context.Guild.GetUser(Context.User.Id);
+            var guildUser = Context.Guild.GetUser(Context.User.Id);
             // check context users perms
-            if (!contextUser.GuildPermissions.KickMembers)
-            {
+            if (!guildUser.GuildPermissions.KickMembers)
                 await ReplyAsync("Nice try.");
-            }
             else
             {
                 // sends dm to the banned user, logs the kick, kicks the user
@@ -146,10 +139,12 @@ namespace CWSBot.Modules.Public
                 await dmChannel.SendMessageAsync($"You have been kicked from {Context.Guild.Name}.\n" +
                     $"Reason: {reason}\n" +
                     $"If you feel you were mistakenly kicked, contact a staff member.");
+
                 await user.KickAsync();
+
                 SocketTextChannel logChannel = (Context.Guild as SocketGuild).TextChannels.FirstOrDefault(x => x.Name == "mod_logs");
                 await logChannel.SendMessageAsync($"```ini\n" +
-                    $"[{contextUser}] kicked [{user}]. Reason: [{reason}]```");
+                    $"[{guildUser}] kicked [{user}]. Reason: [{reason}]```");
             }
         }
 
@@ -158,12 +153,10 @@ namespace CWSBot.Modules.Public
         public async Task Ban(IGuildUser user, [Remainder] string reason)
         {
             // stores context user as a guild user
-            var contextUser = Context.Guild.GetUser(Context.User.Id);
+            var guildUser = Context.Guild.GetUser(Context.User.Id);
             // check context users perms
-            if (!contextUser.GuildPermissions.KickMembers)
-            {
+            if (!guildUser.GuildPermissions.KickMembers)
                 await ReplyAsync("Nice try.");
-            }
             else
             {
                 // sends dm to the banned user, logs the ban, bans the user
@@ -171,10 +164,12 @@ namespace CWSBot.Modules.Public
                 await dmChannel.SendMessageAsync($"You have been kicked from {Context.Guild.Name}.\n" +
                     $"Reason: {reason}\n" +
                     $"If you feel you were mistakenly banned, contact a staff member.");
+
                 await Context.Guild.AddBanAsync(user, 7, reason);
+
                 SocketTextChannel logChannel = (Context.Guild as SocketGuild).TextChannels.FirstOrDefault(x => x.Name == "mod_logs");
                 await logChannel.SendMessageAsync($"```ini\n" +
-                    $"[{contextUser}] banned [{user}]. Reason: [{reason}]```");
+                    $"[{guildUser}] banned [{user}]. Reason: [{reason}]```");
             }
         }
 
@@ -183,12 +178,10 @@ namespace CWSBot.Modules.Public
         public async Task Softban(IGuildUser user, [Remainder] string reason)
         {
             // stores context user as a guild user
-            var contextUser = Context.Guild.GetUser(Context.User.Id);
+            var guildUser = Context.Guild.GetUser(Context.User.Id);
             // check context users perms
-            if (!contextUser.GuildPermissions.KickMembers)
-            {
+            if (!guildUser.GuildPermissions.KickMembers)
                 await ReplyAsync("Nice try.");
-            }
             else
             {
                 // sends dm to the softbanned user, logs the softban, softbans the user
@@ -196,11 +189,13 @@ namespace CWSBot.Modules.Public
                 await dmChannel.SendMessageAsync($"You have been softbanned from {Context.Guild.Name}, feel free to rejoin.\n" +
                     $"Reason: {reason}\n" +
                     $"If you feel you were mistakenly softbanned, contact a staff member.");
+
                 await Context.Guild.AddBanAsync(user, 1);
                 await Context.Guild.RemoveBanAsync(user);
+
                 SocketTextChannel logChannel = (Context.Guild as SocketGuild).TextChannels.FirstOrDefault(x => x.Name == "mod_logs");
                 await logChannel.SendMessageAsync($"```ini\n" +
-                    $"[{contextUser}] softbanned [{user}]. Reason: [{reason}]```");
+                    $"[{guildUser}] softbanned [{user}]. Reason: [{reason}]```");
             }
         }
     }

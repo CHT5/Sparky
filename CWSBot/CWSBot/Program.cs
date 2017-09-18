@@ -29,6 +29,7 @@ namespace CWSBot
             {
                 LogLevel = LogSeverity.Verbose,
             });
+
             commands = new CommandService();
 
             client.Log += Log;
@@ -36,12 +37,12 @@ namespace CWSBot
             //client.UserLeft += UserLeft;
             //client.UserJoined += UserJoined;
             client.MessageReceived += Client_MessageReceived;
-            string token = BotConfig.Load().Token;
 
             await InstallCommands();
 
-            var serviceProvider = ConfigureServices();
-            _provider = serviceProvider;
+            _provider = ConfigureServices();
+
+            var token = BotConfig.Load().Token;
             await client.LoginAsync(TokenType.Bot, token);
             await client.StartAsync();
 
@@ -71,6 +72,7 @@ namespace CWSBot
                         KarmaTime = DateTimeOffset.Now.AddDays(-1),
                         Username = arg.Author.Username
                     };
+
                     dctx.Add(NewDbUser);
                     dctx.SaveChanges();
                     return;
@@ -154,6 +156,7 @@ namespace CWSBot
             client.UserJoined += AccountJoined;
             client.UserLeft += AccountLeft;
             client.Ready += OnConnected;
+
             await commands.AddModulesAsync(Assembly.GetEntryAssembly());
         }
 
@@ -166,27 +169,21 @@ namespace CWSBot
         public async Task HandleCommand(SocketMessage messageParam)
         {
             var message = messageParam as SocketUserMessage;
-
-            if (message == null) return;
-            if (message.Author.IsBot == true) return;
+            if (message == null || message.Author.IsBot) return;
 
             int argPos = 1;
-
             if (!(message.HasStringPrefix(BotConfig.Load().Prefix, ref argPos) || message.HasMentionPrefix(client.CurrentUser, ref argPos))) return;
 
             var context = new SocketCommandContext(client, message);
-
             var result = await commands.ExecuteAsync(context, argPos, _provider);
 
             if (!result.IsSuccess)
                 Console.WriteLine(result.ErrorReason);
         }
 
-
-
         private Task Log(LogMessage msg)
         {
-            var cc = Console.ForegroundColor;
+            var colorOld = Console.ForegroundColor;
             switch (msg.Severity)
             {
                 case LogSeverity.Critical:
@@ -204,8 +201,10 @@ namespace CWSBot
                     Console.ForegroundColor = ConsoleColor.DarkGray;
                     break;
             }
+
             Console.WriteLine($"{DateTime.Now} [{msg.Severity,8}] {msg.Source}: {msg.ToString()}");
-            Console.ForegroundColor = cc;
+            Console.ForegroundColor = colorOld;
+
             return Task.CompletedTask;
         }
 
@@ -214,22 +213,34 @@ namespace CWSBot
             if (!Directory.Exists(Path.Combine(AppContext.BaseDirectory, "configuration")))
                 Directory.CreateDirectory(Path.Combine(AppContext.BaseDirectory, "configuration"));
 
-            string loc = Path.Combine(AppContext.BaseDirectory, "configuration/config.json");
+            string filePath = Path.Combine(AppContext.BaseDirectory, "configuration/config.json");
 
-            if (!File.Exists(loc))                              // Check if the configuration file exists.
+            if (!File.Exists(filePath))                              // Check if the configuration file exists.
             {
                 var config = new BotConfig();               // Create a new configuration object.
 
                 Console.WriteLine("Please enter the following information to save into your configuration/config.json file");
-
                 Console.Write("Bot Token: ");
-                config.Token = Console.ReadLine();              // Read the bot token from console.
+
+                var inputToken = Console.ReadLine();
+                while(inputToken == string.Empty)
+                {
+                    Console.Write("Please enter a valid token: ");
+                    inputToken = Console.ReadLine();
+                }
+
+                config.Token = inputToken;
 
                 Console.Write("Bot Prefix: ");
-                config.Prefix = Console.ReadLine();              // Read the bot prefix from console.
+                var inputPrefix = Console.ReadLine();
+                if (inputPrefix == string.Empty)
+                    Console.WriteLine("Using default prefix: {0}", config.Prefix);
+                else
+                    config.Prefix = inputPrefix;
 
-                config.Save();                                  // Save the new configuration object to file.
+                config.Save();
             }
+
             Console.WriteLine("Configuration has been loaded");
         }
     }
