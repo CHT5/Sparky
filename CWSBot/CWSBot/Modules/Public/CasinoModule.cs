@@ -18,8 +18,6 @@ namespace CWSBot.Modules.Public
             _dctx = dctx;
         }
 
-        EasyEmbed embed_registration = new EasyEmbed();
-
         [Command("gamble", RunMode = RunMode.Async)]
         [Alias("gamba")]
         [Remarks("Rolls two dice, based on the number you roll you will either win or lose tokens.")]
@@ -72,7 +70,7 @@ namespace CWSBot.Modules.Public
                 rollResultText += $":clubs: the sum of your roll was a multiple of 3. *+{(int)Math.Ceiling(stakes * (3 * ((dice1Roll + dice2Roll) / 3) / 10))} point(s)!*\n";
             }
 
-            stakes *= -1;
+            stakes = -stakes;
 
             if (pointResult == 0)
             {
@@ -93,9 +91,10 @@ namespace CWSBot.Modules.Public
                 }
 
             }
-            int profitResult = Convert.ToInt32(stakes + pointResult);
 
+            int profitResult = Convert.ToInt32(stakes + pointResult);
             userMoney.Tokens -= Convert.ToUInt32(profitResult);
+
             _dctx.SaveChanges();
             await ReplyAsync(rollResultText);
         }

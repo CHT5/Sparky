@@ -11,6 +11,9 @@ namespace CWSBot.Config
 
         public string Prefix { get; set; }
         public string Token { get; set; }
+
+        private static BotConfig _config = null;
+
         public BotConfig()
         {
             Prefix = "!";
@@ -19,14 +22,15 @@ namespace CWSBot.Config
 
         public void Save(string dir = "configuration/config.json")
         {
-            string file = Path.Combine(appdir, dir);
-            File.WriteAllText(file, ToJson());
+            string filePath = Path.Combine(appdir, dir);
+            File.WriteAllText(filePath, ToJson());
         }
+
         public static BotConfig Load(string dir = "configuration/config.json")
         {
-            string file = Path.Combine(appdir, dir);
-            return JsonConvert.DeserializeObject<BotConfig>(File.ReadAllText(file));
+            return _config ?? (_config = JsonConvert.DeserializeObject<BotConfig>(File.ReadAllText(Path.Combine(appdir, dir))));
         }
+
         public string ToJson()
             => JsonConvert.SerializeObject(this, Formatting.Indented);
     }
