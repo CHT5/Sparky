@@ -8,7 +8,7 @@ namespace CWSBot.Modules.Public
 {
     public class EasyEmbed
     {
-        EmbedBuilder embed;
+        EmbedBuilder embed = new EmbedBuilder();
         EmbedFooterBuilder footer;
 
         // sets the colour list
@@ -34,36 +34,33 @@ namespace CWSBot.Modules.Public
         //CREATING A BASIC EMBED!
         public void CreateBasicEmbed(EmbedColour colour, string title = null, string description = null, string thumbnailurl = null)
         {
-            var setColour = GetEmbedColour(colour);
-            embed.WithColor(setColour);
-            if (title != null && title != "none") { embed.WithTitle(title); }
-            if (description != null && description != "none") { embed.WithDescription(description); }
-            if (thumbnailurl != null && thumbnailurl != "none") { embed.WithThumbnailUrl(thumbnailurl); }
+            embed.WithColor(GetEmbedColour(colour));
+
+            if (title != null && title != "none") embed.WithTitle(title);
+            if (description != null && description != "none") embed.WithDescription(description);
+            if (thumbnailurl != null && thumbnailurl != "none") embed.WithThumbnailUrl(thumbnailurl);
         }
 
         //CREATING A BASIC EMBED WITH FOOTER SUPPORT!
         public void CreateFooterEmbed(EmbedColour colour, string title = null, string description = null, string thumbnailurl = null, string footer_text = null, string footer_thumbnail = null)
         {
-            var setColour = GetEmbedColour(colour);
-            embed.WithColor(setColour);
+            embed.WithColor(GetEmbedColour(colour));
 
-            if (title != null && title != "none") { embed.WithTitle(title); }
-            if (description != null && description != "none") { embed.WithDescription(description); }
-            if (thumbnailurl != null && thumbnailurl != "none") { embed.WithThumbnailUrl(thumbnailurl); }
+            if (title != null && title != "none") embed.WithTitle(title);
+            if (description != null && description != "none") embed.WithDescription(description);
+            if (thumbnailurl != null && thumbnailurl != "none") embed.WithThumbnailUrl(thumbnailurl);
 
             footer = new EmbedFooterBuilder();
 
             if (footer_text != null && footer_text != "none")
             {
                 embed.WithFooter(footer
-                     .WithText(footer_text)
-                );
+                     .WithText(footer_text));
             }
             if (footer_thumbnail != null && footer_thumbnail != "none")
             {
                 embed.WithFooter(footer
-                     .WithIconUrl(footer_thumbnail)
-                );
+                     .WithIconUrl(footer_thumbnail));
             }
         }
 
@@ -76,15 +73,13 @@ namespace CWSBot.Modules.Public
         //SETTING THE COLOUR OF THE EMBED!
         private Color GetEmbedColour(EmbedColour clr)
         {
-            embed = new EmbedBuilder();
-
             EmbedColour chosenColour = clr;
 
             if (chosenColour == EmbedColour.Random)
             {
                 var colours = Enum.GetValues(typeof(EmbedColour)).OfType<EmbedColour>().ToArray();
-                var rnd = new Random();
-                var nxt = rnd.Next(1, 15);
+                var nxt = new Random().Next(1, 15);
+
                 chosenColour = colours[nxt];
             }
 
