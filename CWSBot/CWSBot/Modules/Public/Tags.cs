@@ -30,7 +30,7 @@ namespace CWSBot.Modules.Public
             if (RetrievedTag != null)
             {
                 //check for URLs to make sure we don't wrap them in the embed
-                string[] Strings_To_Test = TagName.Split(" ");
+                string[] Strings_To_Test = RetrievedTag.Content.Split(" ");
 
                 List<bool> DoWeHaveAUrl = new List<bool>();
 
@@ -45,7 +45,7 @@ namespace CWSBot.Modules.Public
                 //if it is a URL let's send it off without the embed!
                 if (DoWeHaveAUrl.Any(x => x == true))
                 {
-                    await ReplyAsync(string.Format("{0}\n{1}\n{2}", RetrievedTag.Name, RetrievedTag.Content, RetrievedTag.CreatorName));
+                    await ReplyAsync(string.Format("Tag: {0}\nContent: {1}\nOwner: {2}", RetrievedTag.Name, RetrievedTag.Content, RetrievedTag.CreatorName));
                     RetrievedTag.Uses += 1;
                     _dctx.SaveChanges();
                     return;
@@ -79,8 +79,10 @@ namespace CWSBot.Modules.Public
                 }
                 TagNames_.Add(TagNames[i] + separator);
             }
+            string Response = string.Join(", ", TagNames_);
+            Response = Response.Remove(Response.Length - 2);
             Builder.WithTitle("Tag not found!")
-                .WithDescription("Similar tags: \n" + string.Join(", ", TagNames_));
+                .WithDescription("Similar tags: \n" + Response);
             //send result to user
             await ReplyAsync("", false, Builder.Build());
         }
@@ -89,7 +91,7 @@ namespace CWSBot.Modules.Public
         public async Task CreateTagAsync(string TagName, [Remainder] string TagContent)
         {
             var User = (Context.User as SocketGuildUser).Roles;
-            if (_dctx.Tags.Where(x => x.GuildId == Context.Guild.Id).Any(x => x.Name.ToLower() == TagName.ToLower()) || !(User.Any(x => x.Name.ToLower() == "learning")))
+            if (_dctx.Tags.Where(x => x.GuildId == Context.Guild.Id).Any(x => x.Name.ToLower() == TagName.ToLower()))
             {
                 Emoji Denied = new Emoji("\u274c");
                 await Context.Message.AddReactionAsync(Denied);
