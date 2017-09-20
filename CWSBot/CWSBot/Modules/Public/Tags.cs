@@ -13,176 +13,166 @@ namespace CWSBot.Modules.Public
     [Group("tag"), Alias("tags")]
     public class Tags : ModuleBase
     {
-        private CwsContext _dctx;
-        public Tags(CwsContext dctx)
+        private CwsContext _dbContext;
+
+        public Tags(CwsContext DatabaseContext)
         {
-            _dctx = dctx;
+            _dbContext = DatabaseContext;
         }
 
         [Command]
-        public async Task TagAsync(string TagName)
+        public async Task TagAsync(string Name)
         {
             //initialise the builder so we can use it later
-            EmbedBuilder Builder = new EmbedBuilder();
+            EmbedBuilder builder = new EmbedBuilder();
             //retrieve the tag by name
-            Tag RetrievedTag = _dctx.Tags.SingleOrDefault(x => x.Name == TagName && x.GuildId == Context.Guild.Id);
+            Tag recievedTag = _dbContext.Tags.SingleOrDefault(t => t.Name == Name && t.GuildId == Context.Guild.Id);
             //handle null case outside
-            if (RetrievedTag != null)
+            if (recievedTag != null)
             {
                 //check for URLs to make sure we don't wrap them in the embed
-                string[] Strings_To_Test = RetrievedTag.Content.Split(" ");
+                string[] strArray = recievedTag.Content.Split(" ");
 
-                List<bool> DoWeHaveAUrl = new List<bool>();
-
-                foreach (string s in Strings_To_Test)
-                {
-                    Uri UriResult;
-                    bool IsUrl = Uri.TryCreate(s, UriKind.Absolute, out UriResult)
+                bool containsUrl = strArray.Any(s => Uri.TryCreate(s, UriKind.Absolute, out Uri UriResult)
                         && (UriResult.Scheme == Uri.UriSchemeHttp || UriResult.Scheme == Uri.UriSchemeHttps)
-                        && UriResult != null;
-                    DoWeHaveAUrl.Add(IsUrl);
-                }
+                        && UriResult != null);
                 //if it is a URL let's send it off without the embed!
-                if (DoWeHaveAUrl.Any(x => x == true))
+                if (containsUrl)
                 {
-                    await ReplyAsync(string.Format("Tag: {0}\nContent: {1}\nOwner: {2}", RetrievedTag.Name, RetrievedTag.Content, RetrievedTag.CreatorName));
-                    RetrievedTag.Uses += 1;
-                    _dctx.SaveChanges();
+                    await ReplyAsync(string.Format("Tag: {0}\nContent: {1}\nOwner: {2}", recievedTag.Name, recievedTag.Content, recievedTag.CreatorName));
+
+                    recievedTag.Uses += 1;
+                    _dbContext.SaveChanges();
+
                     return;
                 }
                 //build our embed and send it off!
-                Builder.WithTitle(RetrievedTag.Name)
-                    .WithDescription(RetrievedTag.Content)
-                    .WithFooter("Owner: " + RetrievedTag.CreatorName);
-                await ReplyAsync("", false, Builder.Build());
-                RetrievedTag.Uses += 1;
+                builder.WithTitle(recievedTag.Name)
+                    .WithDescription(recievedTag.Content)
+                    .WithFooter("Owner: " + recievedTag.CreatorName);
+
+                await ReplyAsync("", false, builder.Build());
+                recievedTag.Uses += 1;
                 return;
             }
             //lists to store tag names
-            List<string> TagNames = new List<string>();
-            List<string> TagNames_ = new List<string>();
+            List<string> tagNames = new List<string>();
+            List<string> tagNames_ = new List<string>();
             //add tag names to first list
-            foreach (Tag _Tag in _dctx.Tags.Where(x => x.GuildId == Context.Guild.Id))
+            foreach (Tag tag in _dbContext.Tags.Where(x => x.GuildId == Context.Guild.Id))
             {
-                double Distance = Levenshtein.Compute(TagName, _Tag.Name);
+                double Distance = Levenshtein.Compute(Name, tag.Name);
 
-                if (Distance / TagName.Length <= 0.42857142857)
-                    TagNames.Add(_Tag.Name);
+                if (Distance / Name.Length <= 0.42857142857)
+                    tagNames.Add(tag.Name);
             }
             //add all the tags in the first list to the second one, just with a separator every n names.
-            for (int i = 0; i < 20 && i < TagNames.Count(); i++)
+            for (int i = 0; i < 20 && i < tagNames.Count(); i++)
             {
-                string separator = ", ";
-                if (i % 4 == 0 && i != 0)
-                {
-                    separator = "\n";
-                }
-                TagNames_.Add(TagNames[i] + separator);
+                var separator = i % 4 == 0 && i != 0 ? "\n" : ", ";
+
+                tagNames_.Add(tagNames[i] + separator);
             }
-            string Response = string.Join(", ", TagNames_);
-            Response = Response.Remove(Response.Length - 2);
-            Builder.WithTitle("Tag not found!")
-                .WithDescription("Similar tags: \n" + Response);
+
+            string response = string.Join(", ", tagNames_);
+            response = response.Remove(response.Length - 2);
+
+            builder.WithTitle("Tag not found!")
+                .WithDescription("Similar tags: \n" + response);
             //send result to user
-            await ReplyAsync("", false, Builder.Build());
+            await ReplyAsync("", false, builder.Build());
         }
 
         [Command("create")]
-        public async Task CreateTagAsync(string TagName, [Remainder] string TagContent)
+        public async Task CreateTagAsync(string Name, [Remainder] string Content)
         {
-            var User = (Context.User as SocketGuildUser).Roles;
-            if (_dctx.Tags.Where(x => x.GuildId == Context.Guild.Id).Any(x => x.Name.ToLower() == TagName.ToLower()))
+            if (_dbContext.Tags.Where(x => x.GuildId == Context.Guild.Id).Any(x => x.Name.ToLower() == Name.ToLower()))
+                await Context.Message.AddReactionAsync(new Emoji("\u274c")); // Denied emoji
+            else
             {
-                Emoji Denied = new Emoji("\u274c");
-                await Context.Message.AddReactionAsync(Denied);
-                return;
+                _dbContext.Add(new Tag
+                {
+                    Name = Name,
+                    Content = Content,
+                    CreatorName = Context.User.Username,
+                    CreatorId = Context.User.Id,
+                    CreatedAt = DateTimeOffset.Now,
+                    Uses = 0,
+                    GuildId = Context.Guild.Id
+                });
+
+                _dbContext.SaveChanges();
+                await Context.Message.AddReactionAsync(new Emoji("\u2611")); // Accepted emoji
             }
-            Emoji Accepted = new Emoji("\u2611");
-            Tag NewTag = new Tag
-            {
-                Name = TagName,
-                Content = TagContent,
-                CreatorName = Context.User.Username,
-                CreatorId = Context.User.Id,
-                CreatedAt = DateTimeOffset.Now,
-                Uses = 0,
-                GuildId = Context.Guild.Id
-            };
-            _dctx.Add(NewTag);
-            _dctx.SaveChanges();
-            await Context.Message.AddReactionAsync(Accepted);
         }
 
         [Command("delete")]
-        public async Task DeleteTagAsync(string TagName)
+        public async Task DeleteTagAsync(string Name)
         {
-            Tag TagToDelete = _dctx.Tags.SingleOrDefault(x => x.Name.ToLower() == TagName.ToLower() && x.GuildId == Context.Guild.Id);
-            
-            if (TagToDelete is null || TagToDelete.CreatorId != Context.User.Id)
+            Tag tag = _dbContext.Tags.SingleOrDefault(x => x.Name.ToLower() == Name.ToLower() && x.GuildId == Context.Guild.Id);
+
+            if (tag is null || tag.CreatorId != Context.User.Id)
+                await Context.Message.AddReactionAsync(new Emoji("\u274c")); // Denied emoji
+            else
             {
-                Emoji Denied = new Emoji("\u274c");
-                await Context.Message.AddReactionAsync(Denied);
-                return;
+                _dbContext.Remove(tag);
+                _dbContext.SaveChanges();
+
+                await Context.Message.AddReactionAsync(new Emoji("\u2611")); // Accepted emoji
             }
-            Emoji Accepted = new Emoji("\u2611");
-            _dctx.Remove(TagToDelete);
-            _dctx.SaveChanges();
-            await Context.Message.AddReactionAsync(Accepted);
         }
 
         [Command("edit")]
-        public async Task EditTagAsync(string TagName, [Remainder] string NewContent)
+        public async Task EditTagAsync(string Name, [Remainder] string Content)
         {
-            Tag TagToDelete = _dctx.Tags.Where(x => x.GuildId == Context.Guild.Id).SingleOrDefault(x => x.Name.ToLower() == TagName.ToLower());
+            Tag tag = _dbContext.Tags.Where(x => x.GuildId == Context.Guild.Id).SingleOrDefault(x => x.Name.ToLower() == Name.ToLower());
 
-            if (TagToDelete is null || TagToDelete.CreatorId != Context.User.Id)
+            if (tag is null || tag.CreatorId != Context.User.Id)
+                await Context.Message.AddReactionAsync(new Emoji("\u274c")); // Denied emoji
+            else
             {
-                Emoji Denied = new Emoji("\u274c");
-                await Context.Message.AddReactionAsync(Denied);
-                return;
+                tag.Content = Content;
+                _dbContext.SaveChanges();
+
+                await Context.Message.AddReactionAsync(new Emoji("\u2611")); // Accepted emoji
             }
-            Emoji Accepted = new Emoji("\u2611");
-            TagToDelete.Content = NewContent;
-            _dctx.SaveChanges();
-            await Context.Message.AddReactionAsync(Accepted);
         }
 
         [Command("chown")]
-        public async Task ChangeOwnerAsync(string TagName, SocketGuildUser NewOwner)
+        public async Task ChangeOwnerAsync(string Name, SocketGuildUser NewOwner)
         {
-            Tag TagToChown = _dctx.Tags.Where(x => x.GuildId == Context.Guild.Id).SingleOrDefault(x => x.Name.ToLower() == TagName.ToLower());
+            Tag tag = _dbContext.Tags.Where(x => x.GuildId == Context.Guild.Id).SingleOrDefault(x => x.Name.ToLower() == Name.ToLower());
 
-            if (TagToChown is null || TagToChown.CreatorId != Context.User.Id)
+            if (tag is null || tag.CreatorId != Context.User.Id)
+                await Context.Message.AddReactionAsync(new Emoji("\u274c")); // Denied emoji
+            else
             {
-                Emoji Denied = new Emoji("\u274c");
-                await Context.Message.AddReactionAsync(Denied);
-                return;
+                tag.CreatorId = NewOwner.Id;
+                tag.CreatorName = NewOwner.Username;
+
+                _dbContext.SaveChanges();
+
+                await Context.Message.AddReactionAsync(new Emoji("\u2611")); // Accepted emoji
             }
-            Emoji Accepted = new Emoji("\u2611");
-            TagToChown.CreatorId = NewOwner.Id;
-            TagToChown.CreatorName = NewOwner.Username;
-            _dctx.SaveChanges();
-            await Context.Message.AddReactionAsync(Accepted);
         }
 
         [Command("info")]
-        public async Task TagInfoAsync(string TagName)
+        public async Task TagInfoAsync(string Name)
         {
-            Tag TagForInfo = _dctx.Tags.Where(x => x.GuildId == Context.Guild.Id).SingleOrDefault(x => x.Name.ToLower() == TagName.ToLower());
+            Tag tag = _dbContext.Tags.Where(x => x.GuildId == Context.Guild.Id).SingleOrDefault(x => x.Name.ToLower() == Name.ToLower());
 
-            if (TagForInfo is null)
+            if (tag is null)
+                await Context.Message.AddReactionAsync(new Emoji("\u274c")); // Denied emoji
+            else
             {
-                Emoji Denied = new Emoji("\u274c");
-                await Context.Message.AddReactionAsync(Denied);
-                return;
+                var builder = new EmbedBuilder()
+                                .AddField("Owner:", tag.CreatorName)
+                                .AddField("Created at:", tag.CreatedAt.ToString("ddd MMM dd HH: mm:ss"))
+                                .AddField("Content:", tag.Content)
+                                .AddField("Uses", tag.Uses);
+
+                await ReplyAsync("", false, builder.Build());
             }
-            EmbedBuilder Builder = new EmbedBuilder();
-            Builder
-                .AddField("Owner:", TagForInfo.CreatorName)
-                .AddField("Created at:", TagForInfo.CreatedAt.ToString("ddd MMM dd HH: mm:ss"))
-                .AddField("Content:", TagForInfo.Content)
-                .AddField("Uses", TagForInfo.Uses);
-            await ReplyAsync("", false, Builder.Build());
         }
     }
 }
