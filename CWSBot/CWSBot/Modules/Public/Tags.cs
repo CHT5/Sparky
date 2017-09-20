@@ -23,68 +23,63 @@ namespace CWSBot.Modules.Public
         public async Task TagAsync(string TagName)
         {
             //initialise the builder so we can use it later
-            EmbedBuilder Builder = new EmbedBuilder();
+            EmbedBuilder builder = new EmbedBuilder();
             //retrieve the tag by name
-            Tag RetrievedTag = _dctx.Tags.SingleOrDefault(x => x.Name == TagName && x.GuildId == Context.Guild.Id);
+            Tag recievedTag = _dctx.Tags.SingleOrDefault(t => t.Name == TagName && t.GuildId == Context.Guild.Id);
             //handle null case outside
-            if (RetrievedTag != null)
+            if (recievedTag != null)
             {
                 //check for URLs to make sure we don't wrap them in the embed
-                string[] Strings_To_Test = RetrievedTag.Content.Split(" ");
+                string[] strArray = recievedTag.Content.Split(" ");
 
-                List<bool> DoWeHaveAUrl = new List<bool>();
-
-                foreach (string s in Strings_To_Test)
-                {
-                    Uri UriResult;
-                    bool IsUrl = Uri.TryCreate(s, UriKind.Absolute, out UriResult)
+                bool containsUrl = strArray.Any(s => Uri.TryCreate(s, UriKind.Absolute, out Uri UriResult)
                         && (UriResult.Scheme == Uri.UriSchemeHttp || UriResult.Scheme == Uri.UriSchemeHttps)
-                        && UriResult != null;
-                    DoWeHaveAUrl.Add(IsUrl);
-                }
+                        && UriResult != null);
                 //if it is a URL let's send it off without the embed!
-                if (DoWeHaveAUrl.Any(x => x == true))
+                if (containsUrl)
                 {
-                    await ReplyAsync(string.Format("Tag: {0}\nContent: {1}\nOwner: {2}", RetrievedTag.Name, RetrievedTag.Content, RetrievedTag.CreatorName));
-                    RetrievedTag.Uses += 1;
+                    await ReplyAsync(string.Format("Tag: {0}\nContent: {1}\nOwner: {2}", recievedTag.Name, recievedTag.Content, recievedTag.CreatorName));
+
+                    recievedTag.Uses += 1;
                     _dctx.SaveChanges();
+
                     return;
                 }
                 //build our embed and send it off!
-                Builder.WithTitle(RetrievedTag.Name)
-                    .WithDescription(RetrievedTag.Content)
-                    .WithFooter("Owner: " + RetrievedTag.CreatorName);
-                await ReplyAsync("", false, Builder.Build());
-                RetrievedTag.Uses += 1;
+                builder.WithTitle(recievedTag.Name)
+                    .WithDescription(recievedTag.Content)
+                    .WithFooter("Owner: " + recievedTag.CreatorName);
+
+                await ReplyAsync("", false, builder.Build());
+                recievedTag.Uses += 1;
                 return;
             }
             //lists to store tag names
-            List<string> TagNames = new List<string>();
-            List<string> TagNames_ = new List<string>();
+            List<string> tagNames = new List<string>();
+            List<string> tagNames_ = new List<string>();
             //add tag names to first list
-            foreach (Tag _Tag in _dctx.Tags.Where(x => x.GuildId == Context.Guild.Id))
+            foreach (Tag tag in _dctx.Tags.Where(x => x.GuildId == Context.Guild.Id))
             {
-                double Distance = Levenshtein.Compute(TagName, _Tag.Name);
+                double Distance = Levenshtein.Compute(TagName, tag.Name);
 
                 if (Distance / TagName.Length <= 0.42857142857)
-                    TagNames.Add(_Tag.Name);
+                    tagNames.Add(tag.Name);
             }
             //add all the tags in the first list to the second one, just with a separator every n names.
-            for (int i = 0; i < 20 && i < TagNames.Count(); i++)
+            for (int i = 0; i < 20 && i < tagNames.Count(); i++)
             {
-                string separator = ", ";
-                if (i % 4 == 0 && i != 0)
-                {
-                    separator = "\n";
-                }
-                TagNames_.Add(TagNames[i] + separator);
+                var separator = i % 4 == 0 && i != 0 ? "\n" : ", ";
+
+                tagNames_.Add(tagNames[i] + separator);
             }
-            string Response = string.Join(", ", TagNames_);
-            Response = Response.Remove(Response.Length - 2);
-            Builder.WithTitle("Tag not found!")
-                .WithDescription("Similar tags: \n" + Response);
+
+            string response = string.Join(", ", tagNames_);
+            response = response.Remove(response.Length - 2);
+
+            builder.WithTitle("Tag not found!")
+                .WithDescription("Similar tags: \n" + response);
             //send result to user
-            await ReplyAsync("", false, Builder.Build());
+            await ReplyAsync("", false, builder.Build());
         }
 
         [Command("create")]
