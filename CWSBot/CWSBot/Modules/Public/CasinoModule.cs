@@ -28,8 +28,10 @@ namespace CWSBot.Modules.Public
             {
                 await ReplyAsync($"(GambleDragon) :dragon_face:: {Context.User.Mention}, you're missing {stakes - userMoney.Tokens} tokens to do that!\n" +
                     $"(Your current tokens: {userMoney.Tokens})!");
+
                 return;
             }
+
             if (stakes < 1 || stakes > 50)
             {
                 await ReplyAsync($"(GambleDragon) :dragon_face:: I'm sorry, we only take wagers between 1-50.");
@@ -37,9 +39,11 @@ namespace CWSBot.Modules.Public
             }
             
             Random rnd = new Random();
+
             double dice1Roll = rnd.Next(1, 7);
             double dice2Roll = rnd.Next(1, 7);
             double pointResult = 0;
+
             string rollResultText = $"(GambleDragon) :dragon_face:: {Context.User.Mention}, Your roll consisting of a __{dice1Roll}__ and a __{dice2Roll}__, earned points for: \n";
             if (dice1Roll == dice2Roll)
             {

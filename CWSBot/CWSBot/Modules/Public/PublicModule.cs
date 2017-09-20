@@ -65,10 +65,11 @@ namespace CWSBot.Modules.Public
             using (var process = Process.GetCurrentProcess())
             {
                 var upTime = DateTime.Now - process.StartTime;
+                var guilds = Context.Client.Guilds;
 
                 embedInfo.CreateFooterEmbed(embed_Colour, $"{application.Name} Status", $"**Owner: ** {application.Owner.Mention}\n" +
                     $"**Discord lib version: **{DiscordConfig.Version}\n" +
-                    $"**Guilds: **{(Context.Client as DiscordSocketClient).Guilds.Count.ToString()}  **Channels: **{(Context.Client as DiscordSocketClient).Guilds.Sum(g => g.Channels.Count).ToString()}  **Users: **{(Context.Client as DiscordSocketClient).Guilds.Sum(g => g.Users.Count).ToString()}\n" +
+                    $"**Guilds: **{guilds.Count}  **Channels: **{guilds.Sum(g => g.Channels.Count)}  **Users: **{guilds.Sum(g => g.Users.Count)}\n" +
                     $"**Uptime: **{upTime.ToString(@"dd\.hh\:mm\:ss")}", icon_Info, $"For issues with, or questions about the bot, please refer to the staff", icon_Support);
             }
 
