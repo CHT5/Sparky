@@ -175,7 +175,7 @@ namespace CWSBot.Modules.Public
             }
         }
 
-        [Command("alltags")]
+        [Command("list")]
         public async Task ListTagsAsync(string Name = "")
         {
             EmbedBuilder builder = new EmbedBuilder();
