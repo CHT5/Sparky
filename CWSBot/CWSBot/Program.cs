@@ -163,7 +163,7 @@ namespace CWSBot
         public async Task OnConnected()
         {
             //Set game status.
-            await client.SetGameAsync(BotConfig.Load().Prefix + "help with help");
+            await client.SetGameAsync(BotConfig.Load().Prefix + "help");
         }
         
         public async Task HandleCommand(SocketMessage messageParam)
