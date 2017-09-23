@@ -86,7 +86,7 @@ namespace CWSBot.Modules.Public
         [Command("create")]
         public async Task CreateTagAsync(string Name, [Remainder] string Content)
         {
-            if (_dbContext.Tags.Where(x => x.GuildId == Context.Guild.Id).Any(x => x.Name.ToLower() == Name.ToLower()))
+            if (_dbContext.Tags.Where(x => x.GuildId == Context.Guild.Id).Any(x => x.Name.ToLower() == Name.ToLower()) || (Context.User as SocketGuildUser).Roles.Any(x => x.Name.ToLower() == "learning"))
                 await Context.Message.AddReactionAsync(new Emoji("\u274c")); // Denied emoji
             else
             {
@@ -173,6 +173,22 @@ namespace CWSBot.Modules.Public
 
                 await ReplyAsync("", false, builder.Build());
             }
+        }
+
+        [Command("alltags")]
+        public async Task ListTagsAsync(string Name = "")
+        {
+            EmbedBuilder builder = new EmbedBuilder();
+
+            var storedTags = _dbContext.Tags.Where(x => x.GuildId == Context.Guild.Id);
+            string descString = string.Join(", ", storedTags.Select(x => x.Name));
+
+            if (descString.Length > 2000)
+                descString = descString.Substring(0, 2000);
+
+            builder.WithTitle($"Server Tags for {Context.Guild.Name}")
+                .WithDescription(descString);
+            await ReplyAsync("", false, builder.Build());
         }
     }
 }
