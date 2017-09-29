@@ -89,8 +89,8 @@ namespace CWSBot.Modules.Public
             //send result to user
             await ReplyAsync("", false, builder.Build());
         }
-        [Command("mod")]
-        public async Task ModTagAsync(string Name, string args, [Remainder] string content)
+        [Command("mod"), RequireUserPermission(GuildPermission.ManageGuild)]
+        public async Task ModTagAsync(string args, string Name, [Remainder] string content = null)
         {
             switch (args)
             {
@@ -107,14 +107,21 @@ namespace CWSBot.Modules.Public
                         await Context.Message.AddReactionAsync(new Emoji("\u2611")); // Accepted emoji
                     }
                     break;
-                case "chown":
-
-                    break;
                 case "edit":
+                    Tag tag_ = _dbContext.Tags.Where(x => x.GuildId == Context.Guild.Id).SingleOrDefault(x => x.Name.ToLower() == Name.ToLower());
 
+                    if (tag_ is null)
+                        await Context.Message.AddReactionAsync(new Emoji("\u274c")); // Denied emoji
+                    else
+                    {
+                        tag_.Content = content;
+                        _dbContext.SaveChanges();
+
+                        await Context.Message.AddReactionAsync(new Emoji("\u2611")); // Accepted emoji
+                    }
                     break;
                 default:
-
+                    await ReplyAsync("usage: <tag mod delete/edit>");
                     break;
             }
         }
