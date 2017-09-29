@@ -59,12 +59,20 @@ namespace CWSBot.Modules.Public
             List<string> tagNames = new List<string>();
             List<string> tagNames_ = new List<string>();
             //add tag names to first list
-            foreach (Tag tag in _dbContext.Tags.Where(x => x.GuildId == Context.Guild.Id))
+            var tags = _dbContext.Tags.Where(x => x.GuildId == Context.Guild.Id);
+            foreach (Tag tag in tags)
             {
                 double Distance = Levenshtein.Compute(Name, tag.Name);
 
                 if (Distance / Name.Length <= 0.42857142857)
                     tagNames.Add(tag.Name);
+            }
+
+            if (tagNames.Count() == 0)
+            {
+                builder.WithTitle("No matching tags found")
+                    .WithDescription("There were no tags found matching that description. Use <tag list> to find some!");
+                await ReplyAsync("", false, builder.Build());
             }
             //add all the tags in the first list to the second one, just with a separator every n names.
             for (int i = 0; i < 20 && i < tagNames.Count(); i++)
@@ -73,7 +81,6 @@ namespace CWSBot.Modules.Public
 
                 tagNames_.Add(tagNames[i] + separator);
             }
-
             string response = string.Join(", ", tagNames_);
             response = response.Remove(response.Length - 2);
 
@@ -82,7 +89,35 @@ namespace CWSBot.Modules.Public
             //send result to user
             await ReplyAsync("", false, builder.Build());
         }
+        [Command("mod")]
+        public async Task ModTagAsync(string Name, string args, [Remainder] string content)
+        {
+            switch (args)
+            {
+                case "delete":
+                    Tag tag = _dbContext.Tags.SingleOrDefault(x => x.Name.ToLower() == Name.ToLower() && x.GuildId == Context.Guild.Id);
 
+                    if (tag is null)
+                        await Context.Message.AddReactionAsync(new Emoji("\u274c")); // Denied emoji
+                    else
+                    {
+                        _dbContext.Remove(tag);
+                        _dbContext.SaveChanges();
+
+                        await Context.Message.AddReactionAsync(new Emoji("\u2611")); // Accepted emoji
+                    }
+                    break;
+                case "chown":
+
+                    break;
+                case "edit":
+
+                    break;
+                default:
+
+                    break;
+            }
+        }
         [Command("create")]
         public async Task CreateTagAsync(string Name, [Remainder] string Content)
         {
