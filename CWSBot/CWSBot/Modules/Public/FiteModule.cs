@@ -1,4 +1,5 @@
 ﻿using Discord.Commands;
+using Discord.WebSocket;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,44 +12,35 @@ namespace CWSBot.Modules.Public
     public class FiteModule : ModuleBase<SocketCommandContext>
     {
         // Arena fight minigame
-    /* [Command("fite", RunMode = RunMode.Async)]
-     [Alias("fight")]
-     [Remarks("Initiates a fight between mentioned users and picks a random winner.")]
+        [Command("fite", RunMode = RunMode.Async)]
+        [Alias("fight")]
+        [Remarks("Initiates a fight between mentioned users and picks a random winner.")]
+        public async Task FiteAsync(params SocketGuildUser[] Users)
+        {
+            if (Users.Count() == 0)
+            {
+                await ReplyAsync("**WHAT?!** I scheduled the fite but **NOBODY CAME?!** Mention some users to call them out first!");
+                return;
+            }
 
-        //This is a JS code to convert (hopefully I'll do it soon, yours sincerely Maxi)
+            if (Users.Count() == 1)
+            {
+                await ReplyAsync("**It's no fun alone!** Mention more people, **COWARD!**");
+                return;
+            }
 
-        var fighters = message.mentions.users.map(m => m.username); //Gets all the mentioned users
+            var FilteredUsers = Users.GroupBy(x => x.Id).Select(x => x.FirstOrDefault());
 
-        // Return message in case noone was mentioned
-        if (fighters.length == 0) return message.channel.send("**WHAT?!** I scheduled the fite but **NOBODY CAME?!** Mention some users to call them out first!");
+            Random r = new Random();
+            SocketGuildUser winner = FilteredUsers.ElementAt(r.Next(0, (FilteredUsers.Count() - 1)));
 
-        // Return message in case only on person was mentioned 
-        if (fighters.length == 1) return message.channel.send("**It's no fun alone!** Mention more people, **COWARD!**");
+            string competitorList = string.Join(":crossed_swords:", FilteredUsers.Select(x => x.Username));
+            string fightMessage = string.Format("\nIt's been a tough one, but **{0}** managed to avoid the battle and waited until there was only one opponent left!", winner.Username);
+            string lastMessage = string.Format("**{0}** managed to knock the last opponent out and won the battle!\n\n:crown:\n{1}", winner.Username, winner.Mention);
 
-        // Copies the fighters into a new array excluding duplicates
-        var fightersProcessed = fighters.filter(function(item, index, inputArray) {
-            return inputArray.indexOf(item) == index;
-        });
-
-        var winner = Math.floor(Math.random() * fighters.length); // Determine winner early on (pick random)
-
-        // Insert crossed swords between mentions
-        var i, j;
-        for (i = 0, j = 1; i<fighters.length; i++) {
-            fightersProcessed.splice([j], 0, ":crossed_swords:");
-            j += 2;
+            await ReplyAsync(competitorList + "\n" + fightMessage);
+            await Task.Delay(1000);
+            await ReplyAsync(lastMessage);
         }
-
-        fightersProcessed.splice(-1, j); //Remove one last crossed swords sign
-
-        if (fighters.length >= 5) {
-            message.channel.send(`**${fightersProcessed.join(" ")}**\n\nIt's been a tough one, but **${fighters[winner]}** managed to avoid the battle and waited until there was only one opponent left. **${fighters[winner]}** successfully knocked that last opponent out and won!\n\n:crown:\n**${fighters[winner]}**`);
-        }
-        else {
-            message.channel.send(`**${fightersProcessed.join(" ")}**\n\nThe winner is: **${fighters[winner]}**\n\n:crown:\n**${fighters[winner]}**`);
-        }
-        console.log("The following people decided to fight: " + fighters + "... and " + fighters[winner] + " won!");
-    });
-    */
     }
 }
