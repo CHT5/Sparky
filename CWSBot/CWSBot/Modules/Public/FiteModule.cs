@@ -11,13 +11,12 @@ namespace CWSBot.Modules.Public
     public class FiteModule : ModuleBase<SocketCommandContext>
     {
         // Arena fight minigame
-     [Command("fite", RunMode = RunMode.Async)]
+    /* [Command("fite", RunMode = RunMode.Async)]
      [Alias("fight")]
      [Remarks("Initiates a fight between mentioned users and picks a random winner.")]
 
         //This is a JS code to convert (hopefully I'll do it soon, yours sincerely Maxi)
 
-        /*
         var fighters = message.mentions.users.map(m => m.username); //Gets all the mentioned users
 
         // Return message in case noone was mentioned
