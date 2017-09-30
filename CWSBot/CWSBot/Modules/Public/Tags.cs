@@ -25,7 +25,7 @@ namespace CWSBot.Modules.Public
             //initialise the builder so we can use it later
             EmbedBuilder builder = new EmbedBuilder();
             //retrieve the tag by name
-            Tag recievedTag = _dbContext.Tags.SingleOrDefault(t => t.Name == Name.ToLower() && t.GuildId == Context.Guild.Id);
+            Tag recievedTag = _dbContext.Tags.SingleOrDefault(t => t.Name.ToLower() == Name.ToLower() && t.GuildId == Context.Guild.Id);
             //handle null case outside
             if (recievedTag != null)
             {
