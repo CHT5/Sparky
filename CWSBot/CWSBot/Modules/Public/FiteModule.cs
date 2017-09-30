@@ -28,15 +28,21 @@ namespace CWSBot.Modules.Public
                 await ReplyAsync("**It's no fun alone!** Mention more people, **COWARD!**");
                 return;
             }
-
+            string fightMessageContext0 = "managed to avoid the battle and waited until there was only one opponent left!";
+            string fightMessageContext1 = "the last opponent out";
+            if (Users.Count() == 2)
+            {
+                fightMessageContext0 = "was the better fighter and tired out their opponent!";
+                fightMessageContext1 = "out their competitor";
+            }
             var FilteredUsers = Users.GroupBy(x => x.Id).Select(x => x.FirstOrDefault());
 
             Random r = new Random();
             SocketGuildUser winner = FilteredUsers.ElementAt(r.Next(0, (FilteredUsers.Count() - 1)));
 
             string competitorList = string.Join(":crossed_swords:", FilteredUsers.Select(x => x.Username));
-            string fightMessage = string.Format("\nIt's been a tough one, but **{0}** managed to avoid the battle and waited until there was only one opponent left!", winner.Username);
-            string lastMessage = string.Format("**{0}** managed to knock the last opponent out and won the battle!\n\n:crown:\n{1}", winner.Username, winner.Mention);
+            string fightMessage = string.Format("\nIt's been a tough one, but **{0}** {1}", winner.Username, fightMessageContext0);
+            string lastMessage = string.Format("**{0}** managed to knock {1} and won the battle!\n\n:crown:\n{2}", winner.Username, winner.Mention, fightMessageContext1);
 
             await ReplyAsync(competitorList + "\n" + fightMessage);
             await Task.Delay(1000);
