@@ -38,11 +38,12 @@ namespace CWSBot.Modules.Public
             var FilteredUsers = Users.GroupBy(x => x.Id).Select(x => x.FirstOrDefault());
 
             Random r = new Random();
-            SocketGuildUser winner = FilteredUsers.ElementAt(r.Next(0, (FilteredUsers.Count() - 1)));
+
+            SocketGuildUser winner = FilteredUsers.ElementAt(r.Next(0, (FilteredUsers.Count())));
 
             string competitorList = string.Join(":crossed_swords:", FilteredUsers.Select(x => x.Username));
             string fightMessage = string.Format("\nIt's been a tough one, but **{0}** {1}", winner.Username, fightMessageContext0);
-            string lastMessage = string.Format("**{0}** managed to knock {1} and won the battle!\n\n:crown:\n{2}", winner.Username, winner.Mention, fightMessageContext1);
+            string lastMessage = string.Format("**{0}** managed to knock {1} and won the battle!\n\n:crown:\n**{2}**", winner.Username, fightMessageContext1, winner.Username);
 
             await ReplyAsync(competitorList + "\n" + fightMessage);
             await Task.Delay(1000);

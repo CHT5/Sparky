@@ -18,6 +18,11 @@ namespace CWSBot.Modules.Public
             _service = service;
         }
 
+        /*[Command("log")]
+        public async Task LogAsync()
+        {
+
+        }*/
         [Command("prune")] //Command Name
         [Remarks("removes a certain amount of messages")] //Summary for your command. it will not add anything.
         [RequireUserPermission(GuildPermission.ManageMessages)]

@@ -38,7 +38,7 @@ namespace CWSBot.Modules.Public
                 //if it is a URL let's send it off without the embed!
                 if (containsUrl)
                 {
-                    await ReplyAsync(string.Format("Tag: {0}\nContent: {1}\nOwner: {2}", recievedTag.Name, recievedTag.Content, recievedTag.CreatorName));
+                    await ReplyAsync(string.Format("{0}: \n{1}", recievedTag.Name, recievedTag.Content));
 
                     recievedTag.Uses += 1;
                     _dbContext.SaveChanges();
@@ -47,6 +47,7 @@ namespace CWSBot.Modules.Public
                 }
                 //build our embed and send it off!
                 builder.WithTitle(recievedTag.Name)
+                    .WithColor(98, 31, 193)
                     .WithDescription(recievedTag.Content)
                     .WithFooter("Owner: " + recievedTag.CreatorName);
 
@@ -207,6 +208,7 @@ namespace CWSBot.Modules.Public
             else
             {
                 var builder = new EmbedBuilder()
+                                .WithColor(98, 31, 193)
                                 .AddField("Owner:", tag.CreatorName)
                                 .AddField("Created at:", tag.CreatedAt.ToString("ddd MMM dd HH: mm:ss"))
                                 .AddField("Content:", tag.Content)
@@ -228,6 +230,7 @@ namespace CWSBot.Modules.Public
                 descString = descString.Substring(0, 2000);
 
             builder.WithTitle($"Server Tags for {Context.Guild.Name}")
+                .WithColor(98, 31, 193)
                 .WithDescription(descString);
             await ReplyAsync("", false, builder.Build());
         }
