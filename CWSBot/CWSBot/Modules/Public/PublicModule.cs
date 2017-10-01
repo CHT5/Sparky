@@ -76,8 +76,8 @@ namespace CWSBot.Modules.Public
             await embedInfo.SendEmbed(Context);
         }
 
-        //USER-SPECIFIED COMMANDS
-        [Command("rep")]
+        //I don't like this implementation. See KarmaModule.
+        /*[Command("rep")]
         [Remarks("Gives a specified user +1 karma points!")]
         public async Task AddRep(IUser user = null)
         {
@@ -112,7 +112,7 @@ namespace CWSBot.Modules.Public
             receivingUserStatus.Karma++;
 
             await ReplyAsync($"{Context.User.Mention} just gave {user} +1 karma!");
-        }
+        }*/
     }
 }
  

@@ -56,11 +56,16 @@ namespace CWSBot
 
         private void MessageReceivedHandler(SocketMessage arg)
         {
+            Task.Run(() => AddUserToDb(arg)).ConfigureAwait(false);
+        }
+
+        private Task AddUserToDb(SocketMessage arg)
+        {
             using (var dctx = new CwsContext())
             {
                 User DbUser = dctx.Users.SingleOrDefault(x => x.UserId == arg.Author.Id);
 
-                if(DbUser is null)
+                if (DbUser is null)
                 {
                     User NewDbUser = new User
                     {
@@ -75,12 +80,12 @@ namespace CWSBot
 
                     dctx.Add(NewDbUser);
                     dctx.SaveChanges();
-                    return;
+                    return Task.CompletedTask;
                 }
 
                 DbUser.MessageCount++;
                 dctx.SaveChanges();
-                return;
+                return Task.CompletedTask;
             }
         }
 
