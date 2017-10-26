@@ -11,14 +11,15 @@ using System.Threading.Tasks;
 namespace CWSBot.Modules.Public
 {
     [Group("tag"), Alias("tags")]
-    public class Tags : ModuleBase
+    public class TagsModule : ModuleBase
     {
         private CwsContext _dbContext;
 
-        public Tags(CwsContext DatabaseContext)
+        public TagsModule(CwsContext dbContext)
         {
-            _dbContext = DatabaseContext;
+            _dbContext = dbContext;
         }
+
         [Command]
         public async Task TagAsync(string Name)
         {

@@ -9,33 +9,32 @@ using CWSBot.Config;
 using System.Diagnostics;
 using CWSBot.Interaction;
 using CWSBot.Misc;
-using Humanizer;
 
 namespace CWSBot.Modules.Public
 {
     [Group("rep")]
     public class KarmaModule : ModuleBase
     {
-        private CwsContext dbContext;
-        public KarmaModule(CwsContext _dbContext)
+        private CwsContext _dbContext;
+        public KarmaModule(CwsContext dbContext)
         {
-            dbContext = _dbContext;
+            this._dbContext = dbContext;
         }
 
         [Command]
         public async Task RepAsync(SocketGuildUser user)
         {
             //check that recieving user exists
-            if (!dbContext.Users.Any(x => x.UserId == user.Id))
+            if (!_dbContext.Users.Any(x => x.UserId == user.Id))
                 await AddUser(user);
-            var givingDbUser = dbContext.Users.FirstOrDefault(x => x.UserId == Context.User.Id);
+            var givingDbUser = _dbContext.Users.FirstOrDefault(x => x.UserId == Context.User.Id);
             //check that one day has passed, rep isn't being given to a bot, and that its for another user.
             if ((DateTimeOffset.Now - givingDbUser.KarmaTime).TotalDays < 1 || user.IsBot == true || user.Id == Context.User.Id)
             {
                 await Context.Message.AddReactionAsync(new Emoji("\u274c")); // Denied emoji
                 return;
             }
-            var recievingDbUser = dbContext.Users.FirstOrDefault(x => x.UserId == user.Id);
+            var recievingDbUser = _dbContext.Users.FirstOrDefault(x => x.UserId == user.Id);
             //add, save and let users know it worked. 
             if (recievingDbUser.Karma + 1 >= 30 && !user.Roles.Any(x => x.Name.ToLower() == "abyss"))
             {
@@ -44,7 +43,7 @@ namespace CWSBot.Modules.Public
             }
             recievingDbUser.Karma += 1;
             givingDbUser.KarmaTime = DateTimeOffset.Now;
-            dbContext.SaveChanges();
+            _dbContext.SaveChanges();
             await Context.Message.AddReactionAsync(new Emoji("\u2611")); // Accepted emoji
         }
 
@@ -54,13 +53,13 @@ namespace CWSBot.Modules.Public
             if (user is null)
                 user = Context.User as SocketGuildUser;
 
-            var dbUser = dbContext.Users.FirstOrDefault(x => x.UserId == user.Id);
+            var dbUser = _dbContext.Users.FirstOrDefault(x => x.UserId == user.Id);
 
             EmbedBuilder builder = new EmbedBuilder();
             builder.WithTitle($"{user.Username}")
                 .WithColor(98, 31, 193)
                 .AddField("Rep:", dbUser.Karma)
-                .AddField("Rep last given:", (DateTimeOffset.Now - dbUser.KarmaTime).Humanize() + " ago.");
+                .AddField("Rep last given:", (DateTimeOffset.Now - dbUser.KarmaTime).GetHumanizedString() + " ago.");
             await ReplyAsync("", false, builder.Build());
         }
 
@@ -73,7 +72,7 @@ namespace CWSBot.Modules.Public
                 await Context.Message.AddReactionAsync(new Emoji("\u274c")); // Denied emoji
                 return;
             }
-            var dbUser = dbContext.Users.FirstOrDefault(x => x.UserId == user.Id);
+            var dbUser = _dbContext.Users.FirstOrDefault(x => x.UserId == user.Id);
             switch (args)
             {
                 case "reset":
@@ -103,7 +102,7 @@ namespace CWSBot.Modules.Public
                     await Context.Message.AddReactionAsync(new Emoji("\u274c")); // Denied emoji
                     break;
             }
-            dbContext.SaveChanges();
+            _dbContext.SaveChanges();
             await Context.Message.AddReactionAsync(new Emoji("\u2611")); // Accepted emoji
         }
         //need a global solution to ensure there are no future conflicts.
