@@ -33,7 +33,7 @@ namespace CWSBot.Modules.Public
             else
             {
                 var messages = await Context.Channel.GetMessagesAsync(prune).Flatten();
-                await Context.Channel.DeleteMessagesAsync(messages);
+                await (Context.Channel as ITextChannel).DeleteMessagesAsync(messages);
 
                 var channel = Context.Guild.Channels.FirstOrDefault(xc => xc.Name == "mod_logs") as SocketTextChannel;
                 await channel.SendMessageAsync($"```ini\n" +
@@ -54,7 +54,7 @@ namespace CWSBot.Modules.Public
             {
                 var messages = await Context.Channel.GetMessagesAsync().Flatten();
                 var usermessages = messages.Where(x => x.Author == user).Take(prune);
-                await Context.Channel.DeleteMessagesAsync(usermessages);
+                await (Context.Channel as ITextChannel).DeleteMessagesAsync(usermessages);
 
                 var channel = Context.Guild.Channels.FirstOrDefault(xc => xc.Name == "mod_logs") as SocketTextChannel;
                 await channel.SendMessageAsync($"```ini\n" +

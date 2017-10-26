@@ -1,4 +1,6 @@
 config.json
-.vs
+.vscode/
+.vs/
 bin/
 obj/
+cws-bot.db

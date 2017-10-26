@@ -10,13 +10,14 @@ using System.IO;
 using CWSBot;
 using System.Linq;
 using CWSBot.Interaction;
+using CWSBot.Services;
 
 namespace CWSBot
 {
     class Program
     {
-        private CommandService commands;
-        private DiscordSocketClient client;
+        private CommandService _commands;
+        private DiscordSocketClient _client;
         private IServiceProvider _provider;
 
         static void Main(string[] args) => new Program().Start().GetAwaiter().GetResult();
@@ -25,39 +26,39 @@ namespace CWSBot
         {
             EnsureBotConfigExists(); // Ensure that the bot configuration json file has been created.
 
-            client = new DiscordSocketClient(new DiscordSocketConfig()
+            _client = new DiscordSocketClient(new DiscordSocketConfig()
             {
                 LogLevel = LogSeverity.Verbose,
             });
 
-            commands = new CommandService();
+            _commands = new CommandService(new CommandServiceConfig
+                {
+                    CaseSensitiveCommands = false
+                });
 
-            client.Log += Log;
-            commands.Log += Log;
-            //client.UserLeft += UserLeft;
-            //client.UserJoined += UserJoined;
-            client.MessageReceived += Client_MessageReceived;
+            _client.Log += Log;
+            _commands.Log += Log;
+            _client.MessageReceived += HandleMessageReceived;
 
             await InstallCommands();
 
             _provider = ConfigureServices();
 
             var token = BotConfig.Load().Token;
-            await client.LoginAsync(TokenType.Bot, token);
-            await client.StartAsync();
+            await _client.LoginAsync(TokenType.Bot, token);
+            await _client.StartAsync();
 
             await Task.Delay(-1);
         }
 
-        private async Task Client_MessageReceived(SocketMessage arg)
+        private Task HandleMessageReceived(SocketMessage arg)
         {
-            await Task.Factory.StartNew(() => MessageReceivedHandler(arg));
+            _ = Task.Run(() => MessageReceivedHandler(arg));
+            return Task.CompletedTask;
         }
 
         private void MessageReceivedHandler(SocketMessage arg)
-        {
-            Task.Run(() => AddUserToDb(arg)).ConfigureAwait(false);
-        }
+            => _ = Task.Run(() => AddUserToDb(arg)).ConfigureAwait(false);
 
         private Task AddUserToDb(SocketMessage arg)
         {
@@ -89,28 +90,6 @@ namespace CWSBot
             }
         }
 
-        /*private Task UserLeft(SocketGuildUser arg)
-        {
-            //SET GUILD, USER AND GENERAL CHANNEL
-            var guild = client.GetGuild(351284764352839690);
-            var channel = guild.Channels.FirstOrDefault(xc => xc.Name == "user-logs") as SocketTextChannel;
-            channel.SendMessageAsync($"```ini\n [{arg}] left the server.```");
-
-            Database.RemoveUser(arg);
-            return Task.CompletedTask;
-        }
-
-        private Task UserJoined(SocketGuildUser arg)
-        {
-            //SET GUILD, USER AND GENERAL CHANNEL
-            var guild = client.GetGuild(351284764352839690);
-            var channel = guild.Channels.FirstOrDefault(xc => xc.Name == "user-logs") as SocketTextChannel;
-            channel.SendMessageAsync($"```ini\n [{arg}] joined the server.```");
-
-            Database.RemoveUser(arg);
-            return Task.CompletedTask;
-        }*/
-
         public async Task AccountJoined(SocketGuildUser user)
         {
             SocketTextChannel welcomeChannelPublic = user.Guild.TextChannels.FirstOrDefault(x => x.Name == "offtopic_discussions");
@@ -141,34 +120,27 @@ namespace CWSBot
         }
 
         private IServiceProvider ConfigureServices()
-        {
-            var services = new ServiceCollection()
-                .AddSingleton(client)
-            //.AddSingleton<AudioService>() remove Slashes if you have audio
+            => new ServiceCollection()
+                .AddSingleton(_client)
                 .AddDbContext<CwsContext>()
-                .AddSingleton(new CommandService(new CommandServiceConfig
-                {
-                    CaseSensitiveCommands = false
-                }));
-            var provider = new DefaultServiceProviderFactory().CreateServiceProvider(services);
-            //provider.GetService<AudioService>(); Remove slashes if you have audio
-            return provider;
-        }
+                .AddSingleton(_commands)
+                .AddSingleton(new NameService(_client))
+                .BuildServiceProvider();
 
         public async Task InstallCommands()
         {
-            client.MessageReceived += HandleCommand;
-            client.UserJoined += AccountJoined;
-            client.UserLeft += AccountLeft;
-            client.Ready += OnConnected;
+            _client.MessageReceived += HandleCommand;
+            _client.Ready += OnConnected;
+            _client.UserJoined += AccountJoined;
+            _client.UserLeft += AccountLeft;
 
-            await commands.AddModulesAsync(Assembly.GetEntryAssembly());
+            await _commands.AddModulesAsync(Assembly.GetEntryAssembly());
         }
 
         public async Task OnConnected()
         {
             //Set game status.
-            await client.SetGameAsync(BotConfig.Load().Prefix + "help");
+            await _client.SetGameAsync(BotConfig.Load().Prefix + "help");
         }
         
         public async Task HandleCommand(SocketMessage messageParam)
@@ -177,10 +149,10 @@ namespace CWSBot
             if (message == null || message.Author.IsBot) return;
 
             int argPos = 1;
-            if (!(message.HasStringPrefix(BotConfig.Load().Prefix, ref argPos) || message.HasMentionPrefix(client.CurrentUser, ref argPos))) return;
+            if (!(message.HasStringPrefix(BotConfig.Load().Prefix, ref argPos) || message.HasMentionPrefix(_client.CurrentUser, ref argPos))) return;
 
-            var context = new SocketCommandContext(client, message);
-            var result = await commands.ExecuteAsync(context, argPos, _provider);
+            var context = new SocketCommandContext(_client, message);
+            var result = await _commands.ExecuteAsync(context, argPos, _provider);
 
             if (!result.IsSuccess)
                 Console.WriteLine(result.ErrorReason);
@@ -213,6 +185,7 @@ namespace CWSBot
             return Task.CompletedTask;
         }
 
+        // Can this whole config shit be replaced by Microsoft.Extensions.Configuration.Json? Thy
         public static void EnsureBotConfigExists()
         {
             if (!Directory.Exists(Path.Combine(AppContext.BaseDirectory, "configuration")))
