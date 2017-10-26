@@ -131,6 +131,8 @@ namespace CWSBot
         {
             _client.MessageReceived += HandleCommand;
             _client.Ready += OnConnected;
+            _client.UserJoined += AccountJoined;
+            _client.UserLeft += AccountLeft;
 
             await _commands.AddModulesAsync(Assembly.GetEntryAssembly());
         }
