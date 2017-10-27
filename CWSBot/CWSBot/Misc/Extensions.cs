@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 
 namespace CWSBot.Misc
 {
@@ -22,6 +23,28 @@ namespace CWSBot.Misc
                 strings.Add($"{(strings.Count > 0 ? "and " : string.Empty)}{input.Seconds} {(input.Seconds == 1 ? "second" : "seconds")}");
 
             return string.Join(" ", strings);
+        }
+
+        public static bool PointsToImage(this Uri uri)
+        {
+            if (!Path.HasExtension(uri.AbsoluteUri)) return false;
+
+            var path = String.Format("{0}{1}{2}{3}", uri.Scheme, Uri.SchemeDelimiter, uri.Authority, uri.AbsolutePath);
+
+            var ext = Path.GetExtension(path);
+
+            switch(ext)
+            {
+                case ".png":
+                case ".webp":
+                case ".gif":
+                case ".jpg":
+                case ".jpeg":
+                    return true;
+
+                default:
+                    return false;
+            }
         }
     }
 }
