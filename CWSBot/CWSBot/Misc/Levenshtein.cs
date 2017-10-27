@@ -3,7 +3,7 @@
 namespace CWSBot.Misc
 {
     //CREDIT: all credit to https://www.dotnetperls.com/levenshtein for this implementation.
-    public class Levenshtein
+    public static class Levenshtein
     {
         public static int Compute(string s, string t)
         {
