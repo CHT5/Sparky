@@ -96,34 +96,7 @@ namespace CWSBot
             }
         }
 
-        public async Task AccountJoined(SocketGuildUser user)
-        {
-            SocketTextChannel welcomeChannelPublic = user.Guild.TextChannels.FirstOrDefault(x => x.Name == "offtopic_discussions");
-            SocketTextChannel welcomeChannelMod = user.Guild.TextChannels.FirstOrDefault(x => x.Name == "cwsbot_reports");
-            SocketRole learningRole = user.Guild.Roles.FirstOrDefault(x => x.Name == "Learning");
-            SocketRole botsRole = user.Guild.Roles.FirstOrDefault(x => x.Name == "Bots");
-
-            string userDetails = "```ini\n ";
-            string roleAddedText = "```ini\n [";
-            
-            userDetails += string.Format("[{0}]{1}", user.Username, user.IsBot ? " bot has" : string.Empty);
-            roleAddedText += user.IsBot ? botsRole.Name : learningRole.Name;
-            await user.AddRoleAsync(user.IsBot ? botsRole : learningRole);
-
-            string welcomeText = userDetails + " joined the server!```";
-            roleAddedText += $"] has been assigned to [{user.Username}] !```";
-
-            await welcomeChannelMod.SendMessageAsync(welcomeText);
-            await welcomeChannelPublic.SendMessageAsync(welcomeText);
-            await welcomeChannelMod.SendMessageAsync(roleAddedText);
-        }
-
-        public async Task AccountLeft(SocketGuildUser user)
-        {
-            SocketTextChannel goodbyeChannelMod = user.Guild.TextChannels.FirstOrDefault(x => x.Name == "cwsbot_reports");
-
-            await goodbyeChannelMod.SendMessageAsync($"```ini\n [{user.Username}] left the server!```");
-        }
+        
 
         private IServiceProvider ConfigureServices()
             => new ServiceCollection()
@@ -195,7 +168,7 @@ namespace CWSBot
         private IConfiguration GetConfiguration()
             => new ConfigurationBuilder()
                    .SetBasePath(Directory.GetCurrentDirectory())
-                   .AddJsonFile("Files/config.json")
+                   .AddJsonFile("Files/config.json", false, true)
                    .Build();
     }
 }

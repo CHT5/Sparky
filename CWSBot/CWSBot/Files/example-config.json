@@ -1,4 +1,6 @@
 {
     "token": "<token>",
-    "prefix": "<prefix>"
+    "prefix": "<prefix>",
+    "public_welcome_channel_name": "<name>",
+    
 }
