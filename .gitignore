@@ -1,6 +1,7 @@
-Files/config.json
+config.json
 .vscode/
 .vs/
 bin/
 obj/
 cws-bot.db
+CWSBot/CWSBot/Files/config.json
