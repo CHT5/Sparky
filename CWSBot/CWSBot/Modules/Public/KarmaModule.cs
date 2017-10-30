@@ -5,7 +5,6 @@ using Discord.WebSocket;
 using Discord.Commands;
 using Microsoft.Extensions.DependencyInjection;
 using System.Linq;
-using CWSBot.Config;
 using System.Diagnostics;
 using CWSBot.Interaction;
 using CWSBot.Misc;

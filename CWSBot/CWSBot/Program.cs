@@ -5,12 +5,12 @@ using System;
 using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
-using CWSBot.Config;
 using System.IO;
 using CWSBot;
 using System.Linq;
 using CWSBot.Interaction;
 using CWSBot.Services;
+using Microsoft.Extensions.Configuration;
 
 namespace CWSBot
 {
@@ -19,12 +19,19 @@ namespace CWSBot
         private CommandService _commands;
         private DiscordSocketClient _client;
         private IServiceProvider _provider;
+        private IConfiguration _config;
 
         static void Main(string[] args) => new Program().Start().GetAwaiter().GetResult();
 
         public async Task Start()
         {
-            EnsureBotConfigExists(); // Ensure that the bot configuration json file has been created.
+            if (!File.Exists("Files/config.json"))
+            {
+                Console.WriteLine("Please populate the config.json");
+                Environment.Exit(1);
+            }
+
+            _config = GetConfiguration();
 
             _client = new DiscordSocketClient(new DiscordSocketConfig()
             {
@@ -44,8 +51,7 @@ namespace CWSBot
 
             _provider = ConfigureServices();
 
-            var token = BotConfig.Load().Token;
-            await _client.LoginAsync(TokenType.Bot, token);
+            await _client.LoginAsync(TokenType.Bot, _config["token"]);
             await _client.StartAsync();
 
             await Task.Delay(-1);
@@ -125,6 +131,7 @@ namespace CWSBot
                 .AddDbContext<CwsContext>()
                 .AddSingleton(_commands)
                 .AddSingleton(new NameService(_client))
+                .AddSingleton(_config)
                 .BuildServiceProvider();
 
         public async Task InstallCommands()
@@ -140,7 +147,7 @@ namespace CWSBot
         public async Task OnConnected()
         {
             //Set game status.
-            await _client.SetGameAsync(BotConfig.Load().Prefix + "help");
+            await _client.SetGameAsync(_config["prefix"] + "help");
         }
         
         public async Task HandleCommand(SocketMessage messageParam)
@@ -149,7 +156,7 @@ namespace CWSBot
             if (message == null || message.Author.IsBot) return;
 
             int argPos = 1;
-            if (!(message.HasStringPrefix(BotConfig.Load().Prefix, ref argPos) || message.HasMentionPrefix(_client.CurrentUser, ref argPos))) return;
+            if (!(message.HasStringPrefix(_config["prefix"], ref argPos) || message.HasMentionPrefix(_client.CurrentUser, ref argPos))) return;
 
             var context = new SocketCommandContext(_client, message);
             var result = await _commands.ExecuteAsync(context, argPos, _provider);
@@ -185,41 +192,10 @@ namespace CWSBot
             return Task.CompletedTask;
         }
 
-        // Can this whole config shit be replaced by Microsoft.Extensions.Configuration.Json? Thy
-        public static void EnsureBotConfigExists()
-        {
-            if (!Directory.Exists(Path.Combine(AppContext.BaseDirectory, "configuration")))
-                Directory.CreateDirectory(Path.Combine(AppContext.BaseDirectory, "configuration"));
-
-            string filePath = Path.Combine(AppContext.BaseDirectory, "configuration/config.json");
-
-            if (!File.Exists(filePath))                              // Check if the configuration file exists.
-            {
-                var config = new BotConfig();               // Create a new configuration object.
-
-                Console.WriteLine("Please enter the following information to save into your configuration/config.json file");
-                Console.Write("Bot Token: ");
-
-                var inputToken = Console.ReadLine();
-                while(inputToken == string.Empty)
-                {
-                    Console.Write("Please enter a valid token: ");
-                    inputToken = Console.ReadLine();
-                }
-
-                config.Token = inputToken;
-
-                Console.Write("Bot Prefix: ");
-                var inputPrefix = Console.ReadLine();
-                if (inputPrefix == string.Empty)
-                    Console.WriteLine("Using default prefix: {0}", config.Prefix);
-                else
-                    config.Prefix = inputPrefix;
-
-                config.Save();
-            }
-
-            Console.WriteLine("Configuration has been loaded");
-        }
+        private IConfiguration GetConfiguration()
+            => new ConfigurationBuilder()
+                   .SetBasePath(Directory.GetCurrentDirectory())
+                   .AddJsonFile("Files/config.json")
+                   .Build();
     }
 }

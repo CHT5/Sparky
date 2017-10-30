@@ -5,9 +5,9 @@ using Discord.WebSocket;
 using Discord.Commands;
 using Microsoft.Extensions.DependencyInjection;
 using System.Linq;
-using CWSBot.Config;
 using System.Diagnostics;
 using CWSBot.Interaction;
+using Microsoft.Extensions.Configuration;
 
 namespace CWSBot.Modules.Public
 {
@@ -18,10 +18,13 @@ namespace CWSBot.Modules.Public
         private CommandService _service;
         private CwsContext _dctx;
 
-        public PublicModule(CommandService service, CwsContext dctx)
+        private readonly IConfiguration _config;
+
+        public PublicModule(CommandService service, CwsContext dctx, IConfiguration config)
         {
             _service = service;
             _dctx = dctx;
+            _config = config;
         }
         
         //BASIC STATIC COMMANDS
@@ -31,7 +34,7 @@ namespace CWSBot.Modules.Public
         {
             var dmChannel = await Context.User.GetOrCreateDMChannelAsync();
 
-            string prefix = BotConfig.Load().Prefix;
+            string prefix = _config["prefix"];
             var builder = new EmbedBuilder()
             {
                 Color = new Color(114, 137, 218),
