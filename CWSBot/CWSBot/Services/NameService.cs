@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using Discord.WebSocket;
@@ -7,7 +8,7 @@ namespace CWSBot.Services
 {
     public class NameService
     {
-        private const string InvalidNickname = "💩";
+        private const string InvalidNickname = "Unmentionable";
 
         private static string[] _attentionSeekingPrefixes = new [] 
                                 {
@@ -34,10 +35,29 @@ namespace CWSBot.Services
             if (_attentionSeekingPrefixes.Any(x => user.Username.StartsWith(x)))
                 await ChangeNicknameAsync(user, true);
 
-            bool IsCharMentionable(char c)
-                => c >= 34 && c <= 126;
+            int CalculateScore(string input)
+            {
+                bool IsCharMentionable(char c)
+                    => c >= 34 && c <= 126;
 
-            if (user.Username.Sum(x => IsCharMentionable(x) ? 1 : 0) < (user.Username.Length * 0.33))
+                var enumerator = StringInfo.GetTextElementEnumerator(input);
+
+                int score = 0;
+
+                while (enumerator.MoveNext())
+                {
+                    var current = (string)enumerator.Current;
+
+                    if (!char.TryParse(current, out char c))
+                        score += 0;
+                    else
+                        score += IsCharMentionable(c) ? 1 : 0;
+                }
+
+                return score;
+            }
+
+            if (CalculateScore(user.Username) < 3)
                 await ChangeNicknameAsync(user);
         }
 

@@ -37,6 +37,12 @@ namespace CWSBot.Modules.Public
             }
             var FilteredUsers = Users.GroupBy(x => x.Id).Select(x => x.FirstOrDefault());
 
+            if (FilteredUsers.Count() <= 1)
+            {
+                await ReplyAsync("You can't fight yourself, silly!");
+                return;
+            }
+
             Random r = new Random();
 
             SocketGuildUser winner = FilteredUsers.ElementAt(r.Next(0, (FilteredUsers.Count())));

@@ -35,11 +35,15 @@ namespace CWSBot.Modules.Public
             }
             var recievingDbUser = _dbContext.Users.FirstOrDefault(x => x.UserId == user.Id);
             //add, save and let users know it worked. 
-            if (recievingDbUser.Karma + 1 >= 30 && !user.Roles.Any(x => x.Name.ToLower() == "abyss"))
+            if (recievingDbUser.Karma + 1 >= 30 && !user.Roles.Any(x => x.Id == 364042915619799050))
             {
-                var newrole = Context.Guild.Roles.FirstOrDefault(x => x.Name.ToLower() == "abyss");
-                await user.AddRoleAsync(newrole);
+                var newrole = Context.Guild.Roles.FirstOrDefault(x => x.Id == 364042915619799050);
+                if (newrole != null)
+                    await user.AddRoleAsync(newrole);
+                else
+                    Console.WriteLine("No such role \"abyss\"");
             }
+
             recievingDbUser.Karma += 1;
             givingDbUser.KarmaTime = DateTimeOffset.Now;
             _dbContext.SaveChanges();
