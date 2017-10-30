@@ -38,7 +38,10 @@ namespace CWSBot.Modules.Public
             if (recievingDbUser.Karma + 1 >= 30 && !user.Roles.Any(x => x.Name.ToLower() == "abyss"))
             {
                 var newrole = Context.Guild.Roles.FirstOrDefault(x => x.Name.ToLower() == "abyss");
-                await user.AddRoleAsync(newrole);
+                if (newrole != null)
+                    await user.AddRoleAsync(newrole);
+                else
+                    Console.WriteLine("No such role \"abyss\"");
             }
             recievingDbUser.Karma += 1;
             givingDbUser.KarmaTime = DateTimeOffset.Now;
