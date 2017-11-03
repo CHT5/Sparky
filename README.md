@@ -1,22 +1,22 @@
-#Sparky
+# Sparky
 
-##Short description
+## Short description
 
-##Requirements
+## Requirements
 ```
 1. NET Core
 2. Discord .NET library (atleast v 2.0)
 ```
 
-##Installation
+## Installation
 ```
 凸(o_O)
 ```
 
-##How to use
+## How to use
 ```
 ╭∩╮(O_O)╭∩╮
 ```
 
-##License
+## License
 Please see [LICENSE.md](LICENSE.md) file for details.
