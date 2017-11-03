@@ -25,4 +25,4 @@ $ dotnet restore
 3. Run `dotnet run`
 
 ## License
-This project uses the MIT license, see [LICENSE.md](LICENSE.md) file for details, or click [here](https://choosealicense.com/licenses/mit/).
+This project uses the MIT license, see the [LICENSE](LICENSE.md) file for details, or click [here](https://choosealicense.com/licenses/mit/).
