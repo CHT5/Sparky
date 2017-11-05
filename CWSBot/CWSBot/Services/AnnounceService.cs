@@ -26,13 +26,12 @@ namespace CWSBot.Services
             this.SubscribeEvents();
         }
 
+        // Tell me if this is a useful feature, I don't really know
         public bool TryStoppingAnnouncing()
-            // Soon™
-            => throw new NotImplementedException();
+            => throw new NotSupportedException();
 
         public bool TryResumingAnnouncing()
-            // Soon™
-            => throw new NotImplementedException();
+            => throw new NotSupportedException();
 
         public async Task HandleUserJoinedAsync(SocketGuildUser user)
         {

@@ -2,5 +2,8 @@
     "token": "<token>",
     "prefix": "<prefix>",
     "public_welcome_channel_name": "<name>",
-    
+    "mod_welcome_channel_name": "<name>",
+    "learning_role_name": "<name>",
+    "bot_role_name": "<name>",
+    "mod_goodbye_channel_name": "<name>"
 }
