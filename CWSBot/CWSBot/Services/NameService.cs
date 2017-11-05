@@ -57,7 +57,7 @@ namespace CWSBot.Services
                 return score;
             }
 
-            if (CalculateScore(user.Username) < 3)
+            if (CalculateScore(user.Username) < Math.Min(3, new StringInfo(user.Username).LengthInTextElements * 0.33))
                 await ChangeNicknameAsync(user);
         }
 
