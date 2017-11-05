@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -26,16 +27,14 @@ namespace CWSBot.Services
         }
 
         public bool TryStoppingAnnouncing()
-        {
-
-        }
+            // Soon™
+            => throw new NotImplementedException();
 
         public bool TryResumingAnnouncing()
-        {
+            // Soon™
+            => throw new NotImplementedException();
 
-        }
-
-        public async Task AccountJoined(SocketGuildUser user)
+        public async Task HandleUserJoinedAsync(SocketGuildUser user)
         {
             var textChannels = user.Guild.TextChannels;
             var roles = user.Guild.Roles;
@@ -45,7 +44,7 @@ namespace CWSBot.Services
             var botsRole = roles.FirstOrDefault(x => x.Name == this._config["bot_role_name"]);
 
             var userWelcomeText = new StringBuilder(user.IsBot ? "The Bot " : string.Empty);
-            userWelcomeText.Append($"[{user.Username}] has joined the server!");
+            userWelcomeText.Append($"[{user.Username}] joined the server!");
 
             var roleAddedText = new StringBuilder($"[{(user.IsBot ? botsRole.Name : learningRole.Name)}]");
             roleAddedText.Append($" has been assigned to [{user.Username}]!");
@@ -56,7 +55,7 @@ namespace CWSBot.Services
             await welcomeChannelMod.SendMessageAsync(Format.Code(roleAddedText.ToString(), FormatLang));
         }
 
-        public async Task AccountLeft(SocketGuildUser user)
+        public async Task HandleUserLeftAsync(SocketGuildUser user)
         {
             var goodbyeChannelMod = user.Guild.TextChannels.FirstOrDefault(x => x.Name == this._config["mod_goodbye_channel_name"]);
 
@@ -65,12 +64,14 @@ namespace CWSBot.Services
 
         private void SubscribeEvents()
         {
-
+            this._client.UserJoined += HandleUserJoinedAsync;
+            this._client.UserLeft += HandleUserLeftAsync;
         }
 
         private void UnsubscribeEvents()
         {
-
+            this._client.UserJoined -= HandleUserJoinedAsync;
+            this._client.UserLeft -= HandleUserLeftAsync;
         }
     }
 }
