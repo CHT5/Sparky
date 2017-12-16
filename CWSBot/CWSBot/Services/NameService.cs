@@ -75,7 +75,7 @@ namespace CWSBot.Services
                              $"Reason: {(attentionSeeking ? "Attention seeking" : "Unmentionable") + " name"}\n" +
                              "Type: Nickname changed\n"+
                              $"Time: {DateTimeOffset.Now}\n```"+
-                             "Contact a free moderator for a new nickname";
+                             "Contact an available moderator for a new nickname";
 
             await modChannel.SendMessageAsync(message);
         }
