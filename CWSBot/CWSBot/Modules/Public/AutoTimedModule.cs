@@ -1,11 +1,4 @@
-﻿using System;
-using System.Threading.Tasks;
-using Discord;
-using Discord.WebSocket;
-using Discord.Commands;
-using Microsoft.Extensions.DependencyInjection;
-using System.Linq;
-using System.Diagnostics;
+﻿using Discord.Commands;
 
 namespace CWSBot.Modules.Public
 {
