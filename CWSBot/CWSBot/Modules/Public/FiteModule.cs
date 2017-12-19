@@ -1,11 +1,8 @@
 ﻿using Discord.Commands;
 using Discord.WebSocket;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-//using System.Security.Cryptography.RandomNumberGenerator;
 
 namespace CWSBot.Modules.Public
 {
@@ -28,13 +25,16 @@ namespace CWSBot.Modules.Public
                 await ReplyAsync("**It's no fun alone!** Mention more people, **COWARD!**");
                 return;
             }
-            string fightMessageContext0 = "managed to avoid the battle and waited until there was only one opponent left!";
-            string fightMessageContext1 = "the last opponent out";
-            if (Users.Count() == 2)
+            
+			var fightMessageContext0 = "managed to avoid the battle and waited until there was only one opponent left!";
+            var fightMessageContext1 = "the last opponent out";
+            
+			if (Users.Count() == 2)
             {
                 fightMessageContext0 = "was the better fighter and tired out their opponent!";
                 fightMessageContext1 = "out their competitor";
             }
+
             var FilteredUsers = Users.GroupBy(x => x.Id).Select(x => x.FirstOrDefault());
 
             if (FilteredUsers.Count() <= 1)
@@ -43,13 +43,13 @@ namespace CWSBot.Modules.Public
                 return;
             }
 
-            Random r = new Random();
+            var rand = new Random();
 
-            SocketGuildUser winner = FilteredUsers.ElementAt(r.Next(0, (FilteredUsers.Count())));
+            var winner = FilteredUsers.ElementAt(rand.Next(0, (FilteredUsers.Count())));
 
-            string competitorList = string.Join(":crossed_swords:", FilteredUsers.Select(x => x.Username));
-            string fightMessage = string.Format("\nIt's been a tough one, but **{0}** {1}", winner.Username, fightMessageContext0);
-            string lastMessage = string.Format("**{0}** managed to knock {1} and won the battle!\n\n:crown:\n**{2}**", winner.Username, fightMessageContext1, winner.Username);
+            var competitorList = string.Join(" :crossed_swords: ", FilteredUsers.Select(x => x.Username));
+            var fightMessage = $"\nIt's been a tough one, but **{winner.Username}** {fightMessageContext0}";
+            var lastMessage = $"**{winner.Username}** managed to knock {fightMessageContext1} and won the battle!\n\n:crown:\n**{winner.Username}**";
 
             await ReplyAsync(competitorList + "\n" + fightMessage);
             await Task.Delay(1000);
