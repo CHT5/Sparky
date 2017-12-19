@@ -39,7 +39,7 @@ namespace CWSBot.Modules.Public
 
             if (FilteredUsers.Count() <= 1)
             {
-                await ReplyAsync("You can't fight yourself, silly!");
+                await ReplyAsync("One doesn't simply fite oneself, silly!");
                 return;
             }
 
