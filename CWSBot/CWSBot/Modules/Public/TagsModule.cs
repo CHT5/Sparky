@@ -4,7 +4,6 @@ using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -62,7 +61,8 @@ namespace CWSBot.Modules.Public
         }
 
         [Command]
-        public async Task TagAsync([Remainder] string name)
+        [Priority(-1)]
+        public async Task GetTagAsync([Remainder] string name)
         {
             //initialise the builder so we can use it later
             var builder = new EmbedBuilder();
@@ -88,7 +88,7 @@ namespace CWSBot.Modules.Public
                     // if there's an image then put it as embed image
                     if (image != null)
                     {
-                        var description = string.Join(" ", strArray.Where(x => x != image));
+                        var description = recievedTag.Content;
 
                         builder.WithTitle(recievedTag.Name)
                                .WithFooter("Owner: " + recievedTag.CreatorName);

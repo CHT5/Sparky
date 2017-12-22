@@ -3,9 +3,7 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
 using Discord.Commands;
-using Microsoft.Extensions.DependencyInjection;
 using System.Linq;
-using System.Diagnostics;
 using CWSBot.Interaction;
 using CWSBot.Misc;
 
@@ -14,27 +12,41 @@ namespace CWSBot.Modules.Public
     [Group("rep")]
     public class KarmaModule : ModuleBase
     {
-        private CwsContext _dbContext;
-        public KarmaModule(CwsContext dbContext)
+        private const string DeniedEmoji = "\u274c";
+
+        private const string AcceptedEmoji = "\u2611";
+        
+		private CwsContext _dbContext;
+
+		public KarmaModule(CwsContext dbContext)
         {
             this._dbContext = dbContext;
         }
 
+		protected override void AfterExecute(CommandInfo command)
+		{
+                
+		}
+
         [Command]
         public async Task RepAsync(SocketGuildUser user)
         {
-            //check that recieving user exists
+            // check that recieving user exists
             if (!_dbContext.Users.Any(x => x.UserId == user.Id))
                 await AddUser(user);
+
             var givingDbUser = _dbContext.Users.FirstOrDefault(x => x.UserId == Context.User.Id);
-            //check that one day has passed, rep isn't being given to a bot, and that its for another user.
-            if ((DateTimeOffset.Now - givingDbUser.KarmaTime).TotalDays < 1 || user.IsBot == true || user.Id == Context.User.Id)
+            
+			// check that one day has passed, rep isn't being given to a bot, and that its for another user.
+            if ((DateTimeOffset.Now - givingDbUser.KarmaTime).TotalDays < 1 || user.IsBot || user.Id == Context.User.Id)
             {
-                await Context.Message.AddReactionAsync(new Emoji("\u274c")); // Denied emoji
+                await Context.Message.AddReactionAsync(new Emoji(DeniedEmoji)); // Denied emoji
                 return;
             }
+
             var recievingDbUser = _dbContext.Users.FirstOrDefault(x => x.UserId == user.Id);
-            //add, save and let users know it worked. 
+            
+			// add, save and let users know it worked. 
             if (recievingDbUser.Karma + 1 >= 30 && !user.Roles.Any(x => x.Id == 364042915619799050))
             {
                 var newrole = Context.Guild.Roles.FirstOrDefault(x => x.Id == 364042915619799050);
@@ -75,6 +87,7 @@ namespace CWSBot.Modules.Public
                 await Context.Message.AddReactionAsync(new Emoji("\u274c")); // Denied emoji
                 return;
             }
+
             var dbUser = _dbContext.Users.FirstOrDefault(x => x.UserId == user.Id);
             switch (args)
             {
