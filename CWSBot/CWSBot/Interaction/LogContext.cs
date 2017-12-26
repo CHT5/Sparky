@@ -8,10 +8,7 @@ namespace CWSBot.Interaction
 {
     public class LogContext : DbContext
     {
-        public LogContext()
-        {
-            this.Database.EnsureCreated();
-        }
+        public LogContext() => this.Database.EnsureCreated();
 
         public DbSet<ModLog> Modlogs { get; set; }
 

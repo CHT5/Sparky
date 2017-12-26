@@ -12,7 +12,9 @@ namespace CWSBot.Entities
         public int Id { get; set; }
 
         public string Action { get; set; }
+
         public DateTime Time { get; set; }
+
         public string Reason { get; set; }
 
         public ulong? MessageId { get; set; }
