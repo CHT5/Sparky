@@ -13,7 +13,7 @@ namespace CWSBot.Entities
 
         public string Action { get; set; }
 
-        public DateTimeOffset Time { get; set; }
+        public DateTimeOffset Time { get; set; } // trinit used DateTime at first smh
 
         public string Reason { get; set; }
 
