@@ -13,7 +13,7 @@ namespace CWSBot.Entities
 
         public string Action { get; set; }
 
-        public DateTime Time { get; set; }
+        public DateTimeOffset Time { get; set; }
 
         public string Reason { get; set; }
 
