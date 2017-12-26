@@ -106,6 +106,7 @@ namespace CWSBot
                 .AddSingleton(new NameService(_client))
                 .AddSingleton(_config)
                 .AddSingleton(new AnnounceService(_client, _config))
+                .AddTransient<LogContext>()
                 .BuildServiceProvider();
 
         public async Task InstallCommands()
