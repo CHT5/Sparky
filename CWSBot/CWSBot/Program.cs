@@ -11,6 +11,7 @@ using System.Linq;
 using CWSBot.Interaction;
 using CWSBot.Services;
 using Microsoft.Extensions.Configuration;
+using CWSBot.Entities;
 
 namespace CWSBot
 {
@@ -106,6 +107,7 @@ namespace CWSBot
                 .AddSingleton(new NameService(_client))
                 .AddSingleton(_config)
                 .AddSingleton(new AnnounceService(_client, _config))
+                .AddSingleton(new RemindService(_client))
                 .AddTransient<LogContext>()
                 .BuildServiceProvider();
 
@@ -113,6 +115,8 @@ namespace CWSBot
         {
             _client.MessageReceived += HandleCommand;
             _client.Ready += OnConnected;
+
+            _commands.AddTypeReader<TimeSpan>(new TimeSpanTypeReader());
 
             await _commands.AddModulesAsync(Assembly.GetEntryAssembly());
         }
