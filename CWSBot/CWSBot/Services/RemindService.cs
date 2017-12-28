@@ -6,6 +6,7 @@ using CWSBot.Interaction;
 using Discord;
 using Discord.WebSocket;
 using Humanizer;
+using Humanizer.Localisation;
 
 namespace CWSBot
 {
@@ -72,7 +73,7 @@ namespace CWSBot
             try
             {
                 string GetRemindMessage(IUser user, Reminder reminder)
-                    => $"{user.Mention} {(DateTimeOffset.UtcNow - reminder.CreatedAt).Humanize()} ago you asked to be reminded about";
+                    => $"{user.Mention} {(DateTimeOffset.UtcNow - reminder.CreatedAt).Humanize(5, minUnit: TimeUnit.Second, maxUnit: TimeUnit.Year)} ago you asked to be reminded about";
 
                 using (var context = new RemindContext())
                 {

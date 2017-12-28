@@ -33,8 +33,16 @@ namespace CWSBot.Entities
 
             if (!int.TryParse(match.Groups["seconds"].Value, out int seconds) && !string.IsNullOrEmpty(match.Groups["seconds"].Value))
                 return Task.FromResult(TypeReaderResult.FromError(CommandError.ParseFailed, "Too large number given for seconds"));
-            
-            var timespan = new TimeSpan(days + weeks*7 + years*365, hours, minutes, seconds);
+
+            var currentTime = DateTimeOffset.UtcNow;
+
+            var dueTime = currentTime.AddYears(years)
+                                     .AddDays(days + weeks*7)
+                                     .AddHours(hours)
+                                     .AddMinutes(minutes)
+                                     .AddSeconds(seconds);
+
+            var timespan = dueTime - currentTime;
 
             if (timespan.TotalSeconds == 0)
                 return Task.FromResult(TypeReaderResult.FromError(CommandError.UnmetPrecondition, "The timespan has to be at least 1 second long!"));
