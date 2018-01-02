@@ -1,8 +1,10 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using CWSBot.Interaction;
+using CWSBot.Misc;
 using Discord;
 using Discord.WebSocket;
 using Humanizer;
@@ -47,10 +49,15 @@ namespace CWSBot
             }
         }
 
-        private Color GetUserColor(SocketGuildUser user)
-            => user.Roles.Where(x => x.Color.RawValue != Color.Default.RawValue)
-                         .OrderByDescending(x => x.Position)
-                         .FirstOrDefault()?.Color ?? Color.Green;
+        public IEnumerable<Reminder> GetReminders(IUser user, IGuild guild)
+        {
+            using (var context = new RemindContext())
+            {
+                var reminders = context.Reminders.Where(x => x.UserId == user.Id && x.GuildId == guild.Id);
+
+                return reminders.OrderByDescending(x => x.DueTo).ToList();
+            }
+        }
 
         private Embed GetReminderEmbed(SocketGuildUser user, string content)
         {
@@ -62,7 +69,7 @@ namespace CWSBot
                     IconUrl = user.GetAvatarUrl(ImageFormat.Gif)
                 },
                 Description = content,
-                Color = GetUserColor(user)
+                Color = user.GetRoleColor()
             };
 
             return embed.Build();

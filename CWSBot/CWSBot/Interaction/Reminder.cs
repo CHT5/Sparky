@@ -1,5 +1,7 @@
 using System;
+using System.Text;
 using CWSBot.Entities;
+using Humanizer;
 using JetBrains.Annotations;
 using Microsoft.EntityFrameworkCore;
 
@@ -7,6 +9,8 @@ namespace CWSBot.Interaction
 {
     public class Reminder
     {
+        private const string DateTimeFormat = @"dd\.MM\.yyyy hh\:mm\:ss";
+
         public ulong Id { get; set; }
 
         public ulong UserId { get; set; }
@@ -20,6 +24,15 @@ namespace CWSBot.Interaction
         public DateTimeOffset CreatedAt { get; set; }
 
         public DateTimeOffset DueTo { get; set; }
+
+        public override string ToString()
+        {
+            var sb = new StringBuilder();
+            sb.AppendLine($"Set: `{this.CreatedAt.Humanize()} ({this.CreatedAt.UtcDateTime.ToString(DateTimeFormat)} UTC)`");
+            sb.AppendLine($"Due: `{this.DueTo.Humanize()} ({this.DueTo.UtcDateTime.ToString(DateTimeFormat)} UTC)`");
+            sb.AppendLine($"Content: `{this.Content}`");
+            return sb.ToString();
+        }
 
         public static ModelBuilder Build(ModelBuilder modelBuilder)
         {
