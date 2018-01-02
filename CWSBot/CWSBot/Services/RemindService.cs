@@ -10,7 +10,7 @@ using Discord.WebSocket;
 using Humanizer;
 using Humanizer.Localisation;
 
-namespace CWSBot
+namespace CWSBot.Services
 {
     public class RemindService
     {
@@ -56,6 +56,22 @@ namespace CWSBot
                 var reminders = context.Reminders.Where(x => x.UserId == user.Id && x.GuildId == guild.Id);
 
                 return reminders.OrderByDescending(x => x.DueTo).ToList();
+            }
+        }
+
+        public bool DeleteReminder(ulong id)
+        {
+            using (var context = new RemindContext())
+            {
+                var item = context.Reminders.FirstOrDefault(x => x.Id == id); 
+
+                if (item is null) return false;
+
+                context.Reminders.Remove(item);
+
+                context.SaveChanges();
+
+                return true;
             }
         }
 
