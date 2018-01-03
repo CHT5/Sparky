@@ -31,7 +31,9 @@ namespace CWSBot.Entities.Interactive
 
         private const string Reload = "🔄";
 
-        private readonly IUser _user;
+        private readonly IUser _requestUser;
+
+        private readonly IUser _queryUser;
 
         private readonly IGuild _guild;
 
@@ -49,18 +51,21 @@ namespace CWSBot.Entities.Interactive
 
         private RemindService _remindService;
 
-        public InteractiveReminderMessage(IUser user, ITextChannel channel)
+        private bool _modRequested => this._requestUser.Id != this._queryUser.Id;
+
+        public InteractiveReminderMessage(ITextChannel channel, IUser requestUser, IUser queryUser = null)
         {
             this._triggers = new List<InteractiveMessageTrigger>();
             this._selectionStates = new ConcurrentDictionary<int, (Reminder Reminder, bool State)>();
-            this._user = user;
+            this._requestUser = requestUser;
+            this._queryUser = queryUser ?? requestUser;
             this._guild = channel.Guild;
             this._channel = channel;
         }
 
         async Task IInteractiveMessage.SetUpAsync()
         {
-            this.UpdateCache(this._user, this._guild);
+            this.UpdateCache(this._queryUser, this._guild);
             this._embed = this.GenerateEmbed();
             this._message = await this._channel.SendMessageAsync("", embed: this._embed);
             this._triggers = ConfigureTriggers().ToList();
@@ -72,21 +77,21 @@ namespace CWSBot.Entities.Interactive
 
         private IEnumerable<InteractiveMessageTrigger> ConfigureTriggers()
         {
-            yield return new InteractiveMessageTrigger(One, new UserTriggerCondition(this._user),
+            yield return new InteractiveMessageTrigger(One, new UserTriggerCondition(this._requestUser),
                                                             new MessageTriggerCondition(this._message));
-            yield return new InteractiveMessageTrigger(Two, new UserTriggerCondition(this._user),
+            yield return new InteractiveMessageTrigger(Two, new UserTriggerCondition(this._requestUser),
                                                             new MessageTriggerCondition(this._message));
-            yield return new InteractiveMessageTrigger(Three, new UserTriggerCondition(this._user),
+            yield return new InteractiveMessageTrigger(Three, new UserTriggerCondition(this._requestUser),
                                                               new MessageTriggerCondition(this._message));
-            yield return new InteractiveMessageTrigger(Four, new UserTriggerCondition(this._user),
+            yield return new InteractiveMessageTrigger(Four, new UserTriggerCondition(this._requestUser),
                                                              new MessageTriggerCondition(this._message));
-            yield return new InteractiveMessageTrigger(Five, new UserTriggerCondition(this._user),
+            yield return new InteractiveMessageTrigger(Five, new UserTriggerCondition(this._requestUser),
                                                              new MessageTriggerCondition(this._message));
-            yield return new InteractiveMessageTrigger(Delete, new UserTriggerCondition(this._user),
+            yield return new InteractiveMessageTrigger(Delete, new UserTriggerCondition(this._requestUser),
                                                                new MessageTriggerCondition(this._message));
-            yield return new InteractiveMessageTrigger(Stop, new UserTriggerCondition(this._user),
+            yield return new InteractiveMessageTrigger(Stop, new UserTriggerCondition(this._requestUser),
                                                              new MessageTriggerCondition(this._message));
-            yield return new InteractiveMessageTrigger(Reload, new UserTriggerCondition(this._user),
+            yield return new InteractiveMessageTrigger(Reload, new UserTriggerCondition(this._requestUser),
                                                              new MessageTriggerCondition(this._message));
         }
 
@@ -118,29 +123,36 @@ namespace CWSBot.Entities.Interactive
 
         private Embed GenerateEmbed()
         {
+            var title = new StringBuilder("Active Reminders");
+
+            if (!this._modRequested)
+                title.Insert(0, "Your ");
+            else
+                title.Append($" of {this._queryUser}");
+
             var embed = new EmbedBuilder
             {
-                Title = "Active Reminders",
-                Color = this._user.GetRoleColor()
+                Title = title.ToString(),
+                Color = this._requestUser.GetRoleColor()
             };
 
             if (this._selectionStates.Count() == 0)
             {
-                embed.Description = $"You have no active reminders!";
+                embed.Description = $"{(this._modRequested ? $"{this._queryUser} has" : "You have")} no active reminders!";
                 return embed.Build();
             }
 
             foreach (var entry in this._selectionStates.ToList())
             {
                 int index = entry.Key;
-                (Reminder reminder, bool selected) = entry.Value;
+                var (reminder, selected) = entry.Value;
 
-                StringBuilder title = new StringBuilder($"Reminder {index+1}");
+                var value = new StringBuilder($"Reminder {index+1}");
 
                 if (selected)
-                    title.Insert(0, Delete);
+                    value.Insert(0, Delete);
 
-                embed.AddField(title.ToString(), reminder.ToString());
+                embed.AddField(value.ToString(), reminder.ToString());
             }
 
             return embed.Build();
@@ -148,7 +160,7 @@ namespace CWSBot.Entities.Interactive
 
         private async Task UpdateEmbedAsync()
         {
-            UpdateCache(this._user, this._guild);
+            UpdateCache(this._queryUser, this._guild);
             this._embed = GenerateEmbed();
             await this._message.ModifyAsync(x => x.Embed = this._embed);
         }
@@ -219,6 +231,8 @@ namespace CWSBot.Entities.Interactive
                     return UpdateEmbedAsync();
 
                 case Stop:
+                    if (this._modRequested) // If a mod requested, don't keep that message
+                        return this._message.DeleteAsync();
                     return this._message.RemoveAllReactionsAsync();
             }
 

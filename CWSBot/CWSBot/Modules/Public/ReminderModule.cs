@@ -46,7 +46,17 @@ namespace CWSBot.Modules
             [Command("show")]
             public Task ShowRemindersAsync()
             {
-                var interactive = new InteractiveReminderMessage(Context.User, Context.Channel as ITextChannel);
+                var interactive = new InteractiveReminderMessage(Context.Channel as ITextChannel, Context.User);
+
+                return this._interactiveService.SendInteractiveMessageAsync(interactive);
+            }
+
+            [Command("mod show")]
+            [RequireUserPermission(GuildPermission.BanMembers)] // People with Ban perms should be trustworthy enough to
+                                                                // be able to delete reminders responsibly
+            public Task ModShowRemindersAsync([Remainder] IGuildUser user)
+            {
+                var interactive = new InteractiveReminderMessage(Context.Channel as ITextChannel, Context.User, user);
 
                 return this._interactiveService.SendInteractiveMessageAsync(interactive);
             }
