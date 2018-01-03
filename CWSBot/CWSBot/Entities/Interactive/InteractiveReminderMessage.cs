@@ -94,7 +94,9 @@ namespace CWSBot.Entities.Interactive
         {
             var reminders = this._remindService.GetReminders(user, guild);
 
-            for (int i = 0; i < Math.Max(this._selectionStates.Count(), reminders.Count()); i++)
+            var stateCount = this._selectionStates.Count();
+
+            for (int i = 0; i < Math.Max(stateCount, reminders.Count()); i++)
             {
                 var current = reminders.ElementAtOrDefault(i);
 

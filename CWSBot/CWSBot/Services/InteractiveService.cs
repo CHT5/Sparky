@@ -20,7 +20,7 @@ namespace CWSBot.Services
         public InteractiveService(IServiceProvider serviceProvider)
         {
             this._client = serviceProvider.GetService<DiscordSocketClient>();
-            this._client.ReactionAdded += HandleReactionsAsync;
+            this._client.ReactionAdded += (message, channel, reaction) => {_ = Task.Run(() => HandleReactionsAsync(message, channel, reaction)); return Task.CompletedTask;};
             this._provider = serviceProvider;
             this._interactiveMessages = new ConcurrentBag<IInteractiveMessage>();
         }
