@@ -26,7 +26,20 @@ namespace CWSBot.Modules
             if (!this._remindService.TryAddReminder(Context.User, Context.Channel as IGuildChannel, content, DateTimeOffset.UtcNow.Add(dueTo)))
                 return ReplyAsync("You have already reached the maximum allowed reminders!");
             else
-                return ReplyAsync($"I will remind you in {dueTo.Humanize(5, maxUnit: TimeUnit.Year, minUnit: TimeUnit.Second)} about: {Format.Sanitize(content)}!");
+            {
+                EmbedBuilder embed = new EmbedBuilder
+                {
+                    Author = new EmbedAuthorBuilder
+                    {
+                        IconUrl = Context.User.GetAvatarUrl(ImageFormat.Gif),
+                        Name = Context.User.Username
+                    },
+                    Description = content,
+                    Color = Context.User.GetRoleColor()
+                };
+
+                return ReplyAsync($"I will remind you in {dueTo.Humanize(5, maxUnit: TimeUnit.Year, minUnit: TimeUnit.Second)} about: ", embed: embed.Build());
+            }
         }
 
         [Group("reminder")]
