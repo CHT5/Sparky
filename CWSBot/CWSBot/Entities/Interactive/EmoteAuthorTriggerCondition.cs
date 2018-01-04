@@ -4,6 +4,9 @@ using Discord.WebSocket;
 
 namespace CWSBot.Entities.Interactive
 {
+    /// <summary>
+    ///     <see cref="T:ITriggerCondition"/> that checks for a user.
+    /// </summary>
     public class UserTriggerCondition : ITriggerCondition
     {
         private readonly ulong _userId;
