@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using CWSBot.Entities;
 using CWSBot.Entities.Interactive;
 using CWSBot.Misc;
 using CWSBot.Services;
@@ -20,7 +21,7 @@ namespace CWSBot.Modules
 
         [Command("remindme")]
         [RequireContext(ContextType.Guild)]
-        public Task SetReminderAsync(TimeSpan dueTo, [Remainder] string content)
+        public Task SetReminderAsync(TimeSpan dueTo, [Remainder, LimitTo(512)] string content)
         {
             if (!this._remindService.TryAddReminder(Context.User, Context.Channel as IGuildChannel, content, DateTimeOffset.UtcNow.Add(dueTo)))
                 return ReplyAsync("You have already reached the maximum allowed reminders!");
