@@ -1,6 +1,7 @@
 using System;
-using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using CWSBot.Entities.Interactive;
 using Discord;
@@ -15,28 +16,39 @@ namespace CWSBot.Services
 
         private readonly IServiceProvider _provider;
 
-        private readonly ConcurrentBag<IInteractiveMessage> _interactiveMessages;
+        private readonly List<IInteractiveMessage> _interactiveMessages;
+
+        private readonly SemaphoreSlim _interactiveMessagesSemaphore = new SemaphoreSlim(1, 1);
 
         public InteractiveService(IServiceProvider serviceProvider)
         {
             this._client = serviceProvider.GetService<DiscordSocketClient>();
             this._client.ReactionAdded += (message, channel, reaction) => {_ = Task.Run(() => HandleReactionsAsync(message, channel, reaction)); return Task.CompletedTask;};
             this._provider = serviceProvider;
-            this._interactiveMessages = new ConcurrentBag<IInteractiveMessage>();
+            this._interactiveMessages = new List<IInteractiveMessage>();
         }
 
-        public Task SendInteractiveMessageAsync(IInteractiveMessage message)
+        public async Task SendInteractiveMessageAsync(IInteractiveMessage message)
         {
-            message.AddServiceProvider(_provider);
-            this._interactiveMessages.Add(message);
-            return message.SetUpAsync();
+            try
+            {
+                await this._interactiveMessagesSemaphore.WaitAsync();
+                message.Exited += RemoveMessageAsync;
+                message.AddServiceProvider(_provider);
+                this._interactiveMessages.Add(message);
+                await message.SetUpAsync();
+            }
+            finally
+            {
+                this._interactiveMessagesSemaphore.Release();
+            }
         }
 
         private async Task HandleReactionsAsync(Cacheable<IUserMessage, ulong> message, ISocketMessageChannel channel, SocketReaction reaction)
         {
             if (reaction.UserId == this._client.CurrentUser.Id) return;
 
-            foreach (var interactiveMessage in this._interactiveMessages)
+            foreach (var interactiveMessage in this._interactiveMessages.ToList())
             {
                 if (!interactiveMessage.Triggers.Any(x => x.Trigger.ToLowerInvariant() == reaction.Emote.Name.ToLowerInvariant()))
                     continue;
@@ -54,6 +66,19 @@ namespace CWSBot.Services
                 if (!results.All(x => x)) continue;
 
                 await interactiveMessage.OnTriggerReceived(reaction);
+            }
+        }
+
+        private async Task RemoveMessageAsync(IInteractiveMessage message)
+        {
+            try
+            {
+                await this._interactiveMessagesSemaphore.WaitAsync();
+                this._interactiveMessages.Remove(message);
+            }
+            finally
+            {
+                this._interactiveMessagesSemaphore.Release();
             }
         }
     }

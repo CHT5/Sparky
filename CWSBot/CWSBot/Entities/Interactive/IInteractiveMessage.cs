@@ -26,5 +26,10 @@ namespace CWSBot.Entities.Interactive
         ///     Supplies an <see cref="T:IServiceProvider"/> to the class
         /// </summary>
         void AddServiceProvider(IServiceProvider provider);
+
+        /// <summary>
+        ///     This will be called when the class is finished
+        /// </summary>
+        event Func<IInteractiveMessage, Task> Exited;
     }
 }

@@ -33,6 +33,11 @@ namespace CWSBot.Entities.Interactive
 
         // IInteractiveMessage implementations
         IEnumerable<InteractiveMessageTrigger> IInteractiveMessage.Triggers => this._triggers;
+        event Func<IInteractiveMessage, Task> IInteractiveMessage.Exited
+        {
+            add => this._exited += value;
+            remove => this._exited += value;
+        }
 
         // Other vars
         private List<InteractiveMessageTrigger> _triggers;
@@ -41,6 +46,7 @@ namespace CWSBot.Entities.Interactive
         private ConcurrentDictionary<int, (Reminder Reminder, bool State)> _selectionStates;
         private RemindService _remindService;
         private bool _modRequested => this._requestUser.Id != this._queryUser.Id;
+        private Func<IInteractiveMessage, Task> _exited;
 
         /// <summary>
         /// <param name="channel">
@@ -115,9 +121,7 @@ namespace CWSBot.Entities.Interactive
                     return UpdateEmbedAsync();
 
                 case Stop:
-                    if (this._modRequested) // If a mod requested, don't keep that message
-                        return this._message.DeleteAsync();
-                    return this._message.RemoveAllReactionsAsync();
+                    return CleanupAsync();
             }
 
             return Task.CompletedTask;
@@ -289,6 +293,17 @@ namespace CWSBot.Entities.Interactive
         /// </summary>
         private void SwitchPosition(int pos)
             => this._selectionStates.AddOrUpdate(pos, (null, false), BoolSwitchFactory);
+
+        /// <summary>
+        ///     Cleans up
+        /// </summary>
+        private async Task CleanupAsync()
+        {
+            await this._exited?.Invoke(this);
+            if (this._modRequested) // If a mod requested, don't keep that message
+                await this._message.DeleteAsync();
+            await this._message.RemoveAllReactionsAsync();
+        }
         // End Various Helpers
     }
 }
