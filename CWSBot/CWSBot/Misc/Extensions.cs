@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using Discord;
+using Discord.WebSocket;
 
 namespace CWSBot.Misc
 {
@@ -24,6 +27,12 @@ namespace CWSBot.Misc
 
             return string.Join(" ", strings);
         }
+
+        // This will return green if it's not a GuildUser
+        public static Color GetRoleColor(this IUser user)
+            => (user as SocketGuildUser)?.Roles.Where(x => x.Color.RawValue != Color.Default.RawValue)
+                                               .OrderByDescending(x => x.Position)
+                                               .FirstOrDefault()?.Color ?? Color.Green;
 
         public static bool PointsToImage(this Uri uri)
         {
