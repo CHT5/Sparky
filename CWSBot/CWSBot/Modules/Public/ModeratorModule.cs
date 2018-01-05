@@ -9,6 +9,8 @@ using Microsoft.Extensions.Configuration;
 using CWSBot.Entities;
 using CWSBot.Interaction;
 using Discord.Rest;
+using Humanizer;
+using Humanizer.Localisation;
 
 namespace CWSBot.Modules.Public
 {
@@ -69,9 +71,8 @@ namespace CWSBot.Modules.Public
 
         [Command("mute", RunMode = RunMode.Async)]
         [RequireUserPermission(GuildPermission.KickMembers)]
-        public async Task MuteAsync(SocketGuildUser targetUser, [Remainder] string reason = null)
+        public async Task MuteAsync(SocketGuildUser targetUser, TimeSpan timeToMute, [Remainder] string reason = null)
         {
-            await _dctx.Database.EnsureCreatedAsync();
             // get our muted role
             var muteRole = Context.Guild.Roles.FirstOrDefault(role => role.Name.ToLower() == _config["moderation_mute_name"].ToLower());
             // check to make sure our target doesn't already have the role
@@ -90,42 +91,23 @@ namespace CWSBot.Modules.Public
                 await ReplyAsync("Sorry, looks like I couldn't mute your target user. Perhaps their role is higher than mine?");
                 return;
             }
-            // get our logging channel
-            var logChannel = Context.Guild.TextChannels.FirstOrDefault(channel => channel.Name.ToLower() == _config["moderation_log_channel"].ToLower());
             // build our database entry and add it to the database
             var modLog = new ModLog
             {
-                Action = $"{targetUser.Mention} was muted by {Context.User.Mention}.",
+                Action = $"{targetUser.Mention} was muted by {Context.User.Mention} for {timeToMute.Humanize(5, maxUnit: TimeUnit.Year, minUnit: TimeUnit.Second)}",
                 Time = DateTime.Now,
                 Reason = reason ?? "n/a",
                 MessageId = null,
                 Severity = Severity.Low
             };
-            _dctx.Add(modLog);
-            await _dctx.SaveChangesAsync();
-            // grab the entry so we can get the id
-            var dbLog = _dctx.Modlogs.LastOrDefault();
-            // build our embed
-            var logEmbed = new EmbedBuilder
-            {
-                Title = $"Log Message",
-                Description = dbLog.Action + "\n\n" +
-                $"Time: {dbLog.Time.ToString("HH:mm:ss dd/MM/yyy")}\n\n" +
-                $"Reason: {reason ?? _config["prefix"] + $"reason {dbLog.Id}"}",
-                Color = Color.Orange
-            };
-            // send it off.
-            var message = await logChannel.SendMessageAsync("", false, logEmbed.Build());
 
-            dbLog.MessageId = message.Id;
-            await _dctx.SaveChangesAsync();
+            await MakeLogAsync(modLog, reason);
         }
 
         [Command("warn", RunMode = RunMode.Async)] 
         [RequireUserPermission(GuildPermission.BanMembers)]
         public async Task WarnAsync(SocketGuildUser targetUser, [Remainder] string reason = null)
         { 
-            await _dctx.Database.EnsureCreatedAsync();
             // get our warned role
             var warnRole = Context.Guild.Roles.FirstOrDefault(role => role.Name.ToLower() == _config["moderation_warned_name"].ToLower());
             // check to make sure our target doesn't already have the role
@@ -144,8 +126,6 @@ namespace CWSBot.Modules.Public
                 await ReplyAsync("Sorry, looks like I couldn't add the role to your target user. Perhaps their role is higher than mine?");
                 return;
             }
-            // get our logging channel
-            var logChannel = Context.Guild.TextChannels.FirstOrDefault(channel => channel.Name.ToLower() == _config["moderation_log_channel"].ToLower());
             // build our database entry and add it to the database
             var modLog = new ModLog
             {
@@ -155,24 +135,8 @@ namespace CWSBot.Modules.Public
                 MessageId = null, 
                 Severity = Severity.Low
             };
-            _dctx.Add(modLog);
-            await _dctx.SaveChangesAsync();
-            // grab the entry so we can get the id
-            var dbLog = _dctx.Modlogs.LastOrDefault();
-            // build our embed
-            var logEmbed = new EmbedBuilder
-            {
-                Title = $"Log Message",
-                Description = dbLog.Action + "\n\n" +
-                $"Time: {dbLog.Time.ToString("HH:mm:ss dd/MM/yyy")}\n\n" +
-                $"Reason: {reason ?? _config["prefix"]+ $"reason {dbLog.Id}"}",
-                Color = Color.Orange
-            };
-            // send it off.
-            var message = await logChannel.SendMessageAsync("", false, logEmbed.Build());
 
-            dbLog.MessageId = message.Id;
-            await _dctx.SaveChangesAsync();
+            await MakeLogAsync(modLog, reason);
         }
 
         [Command("kick", RunMode = RunMode.Async)]
@@ -189,8 +153,6 @@ namespace CWSBot.Modules.Public
                 await ReplyAsync("Sorry, looks like I couldn't kick your target user. Perhaps their role is higher than mine?");
                 return;
             }
-            // get our logging channel
-            var logChannel = Context.Guild.TextChannels.FirstOrDefault(channel => channel.Name.ToLower() == _config["moderation_log_channel"].ToLower());
             // build our database entry and add it to the database
             var modLog = new ModLog
             {
@@ -201,24 +163,7 @@ namespace CWSBot.Modules.Public
                 Severity = Severity.Medium
             };
 
-            _dctx.Add(modLog);
-            await _dctx.SaveChangesAsync();
-            // grab the entry so we can get the id
-            var dbLog = _dctx.Modlogs.LastOrDefault();
-            // build our embed
-            var logEmbed = new EmbedBuilder
-            {
-                Title = $"Log Message",
-                Description = dbLog.Action + "\n\n" +
-                $"Time: {dbLog.Time.ToString("HH:mm:ss dd/MM/yyy")}\n\n" +
-                $"Reason: {reason ?? _config["prefix"] + $"reason {dbLog.Id}"}",
-                Color = Color.DarkOrange
-            };
-            // send it off.
-            var message = await logChannel.SendMessageAsync("", false, logEmbed.Build());
-
-            dbLog.MessageId = message.Id;
-            await _dctx.SaveChangesAsync();
+            await MakeLogAsync(modLog, reason);
         }
 
         [Command("ban", RunMode = RunMode.Async)]
@@ -235,8 +180,6 @@ namespace CWSBot.Modules.Public
                 await ReplyAsync("Sorry, looks like I couldn't ban your target user. Perhaps their role is higher than mine?");
                 return;
             }
-            // get our logging channel
-            var logChannel = Context.Guild.TextChannels.FirstOrDefault(channel => channel.Name.ToLower() == _config["moderation_log_channel"].ToLower());
             // build our database entry and add it to the database
             var modLog = new ModLog
             {
@@ -246,25 +189,8 @@ namespace CWSBot.Modules.Public
                 MessageId = null,
                 Severity = Severity.Severe
             };
-            // add and save changes
-            _dctx.Add(modLog);
-            await _dctx.SaveChangesAsync();
-            // grab the entry so we can get the id
-            var dbLog = _dctx.Modlogs.LastOrDefault();
-            // build our embed
-            var logEmbed = new EmbedBuilder
-            {
-                Title = $"Log Message",
-                Description = dbLog.Action + "\n\n" +
-                $"Time: {dbLog.Time.ToString("HH:mm:ss dd/MM/yyy")}\n\n" +
-                $"Reason: {reason ?? _config["prefix"] + $"reason {dbLog.Id}"}",
-                Color = Color.Red
-            };
-            // send it off.
-            var message = await logChannel.SendMessageAsync("", false, logEmbed.Build());
 
-            dbLog.MessageId = message.Id;
-            await _dctx.SaveChangesAsync();
+            await MakeLogAsync(modLog, reason);
         }
 
         [Command("reason", RunMode = RunMode.Async)]
@@ -279,6 +205,16 @@ namespace CWSBot.Modules.Public
                 await ReplyAsync("Sorry, that doesn't appear to be a valid id.");
                 return;
             }
+
+            await UpdateLogAsync(dbLog, reason);
+        }
+
+        #endregion
+
+        #region Helper Methods
+
+        private async Task UpdateLogAsync(ModLog dbLog, string reason)
+        {
             // get the message from our logging channel
             var logChannel = Context.Guild.TextChannels.FirstOrDefault(channel => channel.Name.ToLower() == _config["moderation_log_channel"].ToLower());
 
@@ -307,7 +243,7 @@ namespace CWSBot.Modules.Public
             {
                 Title = $"Log Message",
                 Description = dbLog.Action + "\n\n" +
-                $"Time: {dbLog.Time.ToString("HH:mm:ss dd/MM/yyy")}\n\n" +
+                $"Time: {dbLog.Time.ToString("HH:mm:ss dd/MM/yyy")}\n\n GMT" +
                 $"Reason: {reason}",
                 Color = embedColour
             };
@@ -316,6 +252,49 @@ namespace CWSBot.Modules.Public
 
             await Context.Message.DeleteAsync();
         }
+
+        private async Task MakeLogAsync(ModLog modLog, string reason = null)
+        {
+            // Get our logging channel.
+            var logChannel = Context.Guild.TextChannels.FirstOrDefault(channel => channel.Name.ToLower() == _config["moderation_log_channel"].ToLower());
+
+            // Define our embed color based on log severity.
+            Color embedColour;
+
+            switch (modLog.Severity)
+            {
+                case (Severity.Severe):
+                    embedColour = Color.Red;
+                    break;
+                case (Severity.Medium):
+                    embedColour = Color.DarkOrange;
+                    break;
+                default:
+                    embedColour = Color.Orange;
+                    break;
+            }
+
+            // add our log and save changes
+            _dctx.Add(modLog);
+            await _dctx.SaveChangesAsync();
+            // grab the entry so we can get the id
+            var dbLog = _dctx.Modlogs.LastOrDefault();
+            // build our embed
+            var logEmbed = new EmbedBuilder
+            {
+                Title = $"Log Message",
+                Description = dbLog.Action + "\n\n" +
+                $"Time: {dbLog.Time.ToString("HH:mm:ss dd/MM/yyy")}\n\n GMT" +
+                $"Reason: {reason ?? _config["prefix"] + $"reason {dbLog.Id}"}",
+                Color = embedColour
+            };
+            // send it off.
+            var message = await logChannel.SendMessageAsync("", false, logEmbed.Build());
+            // update the modlog with the id of the message that it refers to, so we can use the reason command later on.
+            dbLog.MessageId = message.Id;
+            await _dctx.SaveChangesAsync();
+        }
+
 
         #endregion
     }
