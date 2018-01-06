@@ -167,6 +167,42 @@ namespace CWSBot.Modules.Public
             await MakeLogAsync(modLog, reason);
         }
 
+        [Command("unwarn", RunMode = RunMode.Async)]
+        [RequireUserPermission(GuildPermission.BanMembers)]
+        public async Task UnwarnAsync(SocketGuildUser targetUser, [Remainder] string reason = null)
+        {
+            // get our warned role
+            var warnRole = Context.Guild.Roles.FirstOrDefault(role => role.Name.ToLower() == _config["moderation_warned_name"].ToLower());
+            // check to make sure our target has
+            if (!targetUser.Roles.Any(role => role.Name.ToLower() == warnRole.Name.ToLower()))
+            {
+                await ReplyAsync("That user isn't warned!");
+                return;
+            }
+            // try adding the role to our target. In the case of a 403, let the user know.
+            try
+            {
+                await targetUser.RemoveRoleAsync(warnRole);
+            }
+            catch
+            {
+                await ReplyAsync("Sorry, looks like I couldn't unwarn your target user. Perhaps their role is higher than mine?");
+                return;
+            }
+            // build our database entry and add it to the database
+            var modLog = new ModLog
+            {
+                Action = $"{targetUser.Mention} was unwarned by {Context.User.Mention}.",
+                Time = DateTimeOffset.Now,
+                Reason = reason ?? "n/a",
+                MessageId = null,
+                Severity = Severity.Low,
+                ActorId = Context.User.Id
+            };
+
+            await MakeLogAsync(modLog, reason);
+        }
+
         [Command("kick", RunMode = RunMode.Async)]
         [RequireUserPermission(GuildPermission.BanMembers)]
         public async Task KickAsync(SocketGuildUser targetUser, [Remainder] string reason = null)
@@ -243,6 +279,7 @@ namespace CWSBot.Modules.Public
         }
 
         [Command("audit", RunMode = RunMode.Async)]
+        [RequireUserPermission(GuildPermission.KickMembers)]
         public async Task AuditAsync(int caseId)
         {
             if (!_dctx.Modlogs.Any(log => log.Id == caseId))
@@ -265,6 +302,40 @@ namespace CWSBot.Modules.Public
             };
 
             await ReplyAsync("", false, auditEmbed.Build());
+        }
+
+        [Command("nick", RunMode = RunMode.Async)]
+        [RequireUserPermission(GuildPermission.KickMembers)]
+        public async Task NickAsync(SocketGuildUser target, [Remainder] string reason = null)
+        {
+            var modLog = new ModLog
+            {
+                Action = $"{target.Mention} nickname was changed by {Context.User.Mention}.",
+                Time = DateTimeOffset.Now,
+                Reason = reason ?? "n/a",
+                MessageId = null,
+                Severity = Severity.Low,
+                ActorId = Context.User.Id
+            };
+
+            await MakeLogAsync(modLog, reason);
+        }
+
+        [Command("authbot", RunMode = RunMode.Async)]
+        [RequireUserPermission(GuildPermission.KickMembers)]
+        public async Task AuthBotAsync(SocketGuildUser target, SocketGuildUser bot, [Remainder] string reason = null)
+        {
+            var modLog = new ModLog
+            {
+                Action = $"{target.Mention}'s bot {bot.Mention} was authed by {Context.User.Mention}.",
+                Time = DateTimeOffset.Now,
+                Reason = reason ?? "n/a",
+                MessageId = null,
+                Severity = Severity.Low,
+                ActorId = Context.User.Id
+            };
+
+            await MakeLogAsync(modLog, reason);
         }
 
         #endregion
