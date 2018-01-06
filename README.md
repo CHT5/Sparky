@@ -12,7 +12,7 @@ A versatile moderation bot made for the discord guild [Coding With Storm]()
 
 ## Installation
 ```bash
-$ git clone https://github.com/LunarLite/CWSBot-C-.git
+$ git clone https://github.com/trinitrot0luene/Sparky.git
 $ cd CWSBot-C-
 $ dotnet restore
 ```
