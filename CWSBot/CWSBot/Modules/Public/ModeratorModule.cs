@@ -11,6 +11,7 @@ using CWSBot.Interaction;
 using Discord.Rest;
 using Humanizer;
 using Humanizer.Localisation;
+using CWSBot.Services;
 
 namespace CWSBot.Modules.Public
 {
@@ -19,12 +20,14 @@ namespace CWSBot.Modules.Public
         private CommandService _service;
         private IConfiguration _config;
         private LogContext _dctx;
+        private MuteService _mutes;
 
-        public ModeratorModule(CommandService service, IConfiguration config, LogContext dctx)
+        public ModeratorModule(CommandService service, IConfiguration config, LogContext dctx, MuteService mutes)
         {
             _service = service;
             _config = config;
             _dctx = dctx;
+            _mutes = mutes;
         }
         #region Chat Cleaning Commands
         [Command("prune")] //Command Name
@@ -75,11 +78,11 @@ namespace CWSBot.Modules.Public
         {
             // get our muted role
             var muteRole = Context.Guild.Roles.FirstOrDefault(role => role.Name.ToLower() == _config["moderation_mute_name"].ToLower());
-            // check to make sure our target doesn't already have the role
-            if (targetUser.Roles.Any(role => role.Name.ToLower() == muteRole.Name.ToLower()))
+            // check to make sure our target doesn't already have an unmute queued
+            var timeToUnmute = DateTimeOffset.UtcNow + timeToMute;
+            if (!_mutes.TryAddMute(Context.User, targetUser, Context.Guild, timeToUnmute))
             {
-                await ReplyAsync("User is already muted!");
-                return;
+                await ReplyAsync($"User is already muted.");
             }
             // try adding the role to our target. In the case of a 403, let the user know.
             try
@@ -89,19 +92,43 @@ namespace CWSBot.Modules.Public
             catch
             {
                 await ReplyAsync("Sorry, looks like I couldn't mute your target user. Perhaps their role is higher than mine?");
+                // remove the queued unmute since we couldn't assign the role.
+                _mutes.RemoveQueuedUnmute(targetUser);
                 return;
             }
+
+
             // build our database entry and add it to the database
             var modLog = new ModLog
             {
                 Action = $"{targetUser.Mention} was muted by {Context.User.Mention} for {timeToMute.Humanize(5, maxUnit: TimeUnit.Year, minUnit: TimeUnit.Second)}",
-                Time = DateTime.Now,
+                Time = DateTimeOffset.Now,
                 Reason = reason ?? "n/a",
                 MessageId = null,
-                Severity = Severity.Low
+                Severity = Severity.Low,
+                ActorId = Context.User.Id
             };
 
             await MakeLogAsync(modLog, reason);
+        }
+
+        [Command("unmute", RunMode = RunMode.Async)]
+        [RequireUserPermission(GuildPermission.KickMembers)]
+        public async Task UnmuteAsync(SocketGuildUser targetUser, [Remainder] string reason = null)
+        {
+            await _mutes.ForceUnmute(targetUser);
+
+            var log = new ModLog
+            {
+                Action = $"{targetUser.Mention} was unmuted by {Context.User.Mention}",
+                Time = DateTimeOffset.Now,
+                Reason = reason ?? "n/a",
+                MessageId = null,
+                Severity = Severity.Low,
+                ActorId = Context.User.Id
+            };
+
+            await MakeLogAsync(modLog: log, reason);
         }
 
         [Command("warn", RunMode = RunMode.Async)] 
@@ -130,10 +157,11 @@ namespace CWSBot.Modules.Public
             var modLog = new ModLog
             {
                 Action = $"{targetUser.Mention} was warned by {Context.User.Mention}.",
-                Time = DateTime.Now,
+                Time = DateTimeOffset.Now,
                 Reason = reason ?? "n/a",
                 MessageId = null, 
-                Severity = Severity.Low
+                Severity = Severity.Low, 
+                ActorId = Context.User.Id
             };
 
             await MakeLogAsync(modLog, reason);
@@ -157,10 +185,11 @@ namespace CWSBot.Modules.Public
             var modLog = new ModLog
             {
                 Action = $"{targetUser.Mention} was kicked by {Context.User.Mention}.",
-                Time = DateTime.Now,
+                Time = DateTimeOffset.Now,
                 Reason = reason ?? "n/a",
                 MessageId = null, 
-                Severity = Severity.Medium
+                Severity = Severity.Medium,
+                ActorId = Context.User.Id
             };
 
             await MakeLogAsync(modLog, reason);
@@ -184,10 +213,11 @@ namespace CWSBot.Modules.Public
             var modLog = new ModLog
             {
                 Action = $"{targetUser.Mention} was banned by {Context.User.Mention}.",
-                Time = DateTime.Now,
+                Time = DateTimeOffset.Now,
                 Reason = reason ?? "n/a",
                 MessageId = null,
-                Severity = Severity.Severe
+                Severity = Severity.Severe,
+                ActorId = Context.User.Id
             };
 
             await MakeLogAsync(modLog, reason);
@@ -206,7 +236,35 @@ namespace CWSBot.Modules.Public
                 return;
             }
 
+            dbLog.Reason = reason;
+            _dctx.SaveChanges();
+
             await UpdateLogAsync(dbLog, reason);
+        }
+
+        [Command("audit", RunMode = RunMode.Async)]
+        public async Task AuditAsync(int caseId)
+        {
+            if (!_dctx.Modlogs.Any(log => log.Id == caseId))
+            {
+                await ReplyAsync("I have no case files stored with that id.");
+                return;
+            }
+
+            var dbLog = _dctx.Modlogs.FirstOrDefault(log => log.Id == caseId);
+
+            var actor = Context.Client.GetUser(dbLog.ActorId);
+
+            var auditEmbed = new EmbedBuilder
+            {
+                Title = $"Audit of case {dbLog.Id}",
+                Description = $"Responsible staff member: {actor.Mention}\n" +
+                $"Action: {dbLog.Action}\n" +
+                $"Reason: {dbLog.Reason}\n",
+                Footer = (new EmbedFooterBuilder { Text = $"Time: {dbLog.Time.ToString("HH:mm:ss dd/MM/yyy")} GMT+0" })
+            };
+
+            await ReplyAsync("", false, auditEmbed.Build());
         }
 
         #endregion
@@ -243,9 +301,10 @@ namespace CWSBot.Modules.Public
             {
                 Title = $"Log Message",
                 Description = dbLog.Action + "\n\n" +
-                $"Time: {dbLog.Time.ToString("HH:mm:ss dd/MM/yyy")}\n\n GMT" +
+                $"Time: {dbLog.Time.ToString("HH:mm:ss dd/MM/yyy")} GMT+0\n\n" +
                 $"Reason: {reason}",
-                Color = embedColour
+                Color = embedColour,
+                Footer = (new EmbedFooterBuilder { Text = $"Case {dbLog.Id}" })
             };
 
             await (oldMessage as RestUserMessage).ModifyAsync(msg => msg.Embed = logEmbed.Build());
@@ -284,9 +343,10 @@ namespace CWSBot.Modules.Public
             {
                 Title = $"Log Message",
                 Description = dbLog.Action + "\n\n" +
-                $"Time: {dbLog.Time.ToString("HH:mm:ss dd/MM/yyy")}\n\n GMT" +
-                $"Reason: {reason ?? _config["prefix"] + $"reason {dbLog.Id}"}",
-                Color = embedColour
+                $"Time: {dbLog.Time.ToString("HH:mm:ss dd/MM/yyy")} GMT+0\n\n" +
+                $"Reason: {reason ?? _config["prefix"] + $"reason {dbLog.Id} to set a reason."}",
+                Color = embedColour,
+                Footer = (new EmbedFooterBuilder { Text = $"Case {dbLog.Id}" } )
             };
             // send it off.
             var message = await logChannel.SendMessageAsync("", false, logEmbed.Build());
@@ -294,8 +354,6 @@ namespace CWSBot.Modules.Public
             dbLog.MessageId = message.Id;
             await _dctx.SaveChangesAsync();
         }
-
-
         #endregion
     }
 }
