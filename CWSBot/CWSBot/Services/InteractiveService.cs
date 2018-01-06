@@ -57,13 +57,13 @@ namespace CWSBot.Services
 
                 var user = reaction.User.GetValueOrDefault();
 
-                await msg.RemoveReactionAsync(reaction.Emote, user);
-
                 var checks = interactiveMessage.Triggers.SelectMany(x => x.Conditions.Select(y => y.CheckAsync(reaction, msg)));
 
                 var results = await Task.WhenAll(checks);
 
                 if (!results.All(x => x)) continue;
+
+                await msg.RemoveReactionAsync(reaction.Emote, user);
 
                 await interactiveMessage.OnTriggerReceived(reaction);
             }
