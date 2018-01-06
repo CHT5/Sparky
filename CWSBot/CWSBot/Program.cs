@@ -110,6 +110,7 @@ namespace CWSBot
                 .AddSingleton(new RemindService(_client))
                 .AddTransient<LogContext>()
                 .AddSingleton<InteractiveService>()
+                .AddSingleton(new MuteService(_client, _config))
                 .BuildServiceProvider();
 
         public async Task InstallCommands()

@@ -20,5 +20,7 @@ namespace CWSBot.Entities
         public ulong? MessageId { get; set; }
 
         public Severity Severity { get; set; }
+
+        public ulong ActorId { get; set; }
     }
 }
