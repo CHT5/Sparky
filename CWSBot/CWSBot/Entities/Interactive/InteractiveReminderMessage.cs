@@ -38,6 +38,7 @@ namespace CWSBot.Entities.Interactive
             add => this._exited += value;
             remove => this._exited += value;
         }
+        IUserMessage IInteractiveMessage.Message => this._message;
 
         // Other vars
         private List<InteractiveMessageTrigger> _triggers;

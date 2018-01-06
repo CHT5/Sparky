@@ -128,7 +128,7 @@ namespace CWSBot.Modules.Public
                 ActorId = Context.User.Id
             };
 
-            await MakeLogAsync(modLog: log, reason);
+            await MakeLogAsync(log, reason);
         }
 
         [Command("warn", RunMode = RunMode.Async)] 
