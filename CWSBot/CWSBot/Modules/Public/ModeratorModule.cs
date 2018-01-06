@@ -306,7 +306,7 @@ namespace CWSBot.Modules.Public
 
         [Command("nick", RunMode = RunMode.Async)]
         [RequireUserPermission(GuildPermission.KickMembers)]
-        public async Task NickAsync(SocketGuildUser target, [Remainder] string reason = null)
+        public Task NickAsync(SocketGuildUser target, [Remainder] string reason = null)
         {
             var modLog = new ModLog
             {
@@ -318,12 +318,12 @@ namespace CWSBot.Modules.Public
                 ActorId = Context.User.Id
             };
 
-            await MakeLogAsync(modLog, reason);
+            return MakeLogAsync(modLog, reason);
         }
 
         [Command("authbot", RunMode = RunMode.Async)]
         [RequireUserPermission(GuildPermission.KickMembers)]
-        public async Task AuthBotAsync(SocketGuildUser target, SocketGuildUser bot, [Remainder] string reason = null)
+        public Task AuthBotAsync(SocketGuildUser target, SocketGuildUser bot, [Remainder] string reason = null)
         {
             var modLog = new ModLog
             {
@@ -335,7 +335,7 @@ namespace CWSBot.Modules.Public
                 ActorId = Context.User.Id
             };
 
-            await MakeLogAsync(modLog, reason);
+            return MakeLogAsync(modLog, reason);
         }
 
         #endregion
