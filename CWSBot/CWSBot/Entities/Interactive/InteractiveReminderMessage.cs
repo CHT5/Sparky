@@ -140,7 +140,7 @@ namespace CWSBot.Entities.Interactive
             if (!this._modRequested)
                 title.Insert(0, "Your ");
             else
-                title.Append($" of {this._queryUser}");
+                title.Append($" of {(this._queryUser is IGuildUser guildUser ? guildUser.Nickname : this._queryUser.Username)}");
 
             var embed = new EmbedBuilder
             {
