@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Discord;
 using Discord.WebSocket;
 
 namespace CWSBot.Entities.Interactive
@@ -31,5 +32,7 @@ namespace CWSBot.Entities.Interactive
         ///     This will be called when the class is finished
         /// </summary>
         event Func<IInteractiveMessage, Task> Exited;
+
+        IUserMessage Message { get; }
     }
 }

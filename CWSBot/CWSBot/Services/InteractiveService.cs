@@ -53,6 +53,8 @@ namespace CWSBot.Services
                 if (!interactiveMessage.Triggers.Any(x => x.Trigger.ToLowerInvariant() == reaction.Emote.Name.ToLowerInvariant()))
                     continue;
 
+                if (message.Id != interactiveMessage.Message.Id) continue;
+
                 var msg = await message.GetOrDownloadAsync();
 
                 var user = reaction.User.GetValueOrDefault();
