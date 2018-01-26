@@ -31,7 +31,7 @@ namespace CWSBot.Modules
                 {
                     Author = new EmbedAuthorBuilder
                     {
-                        IconUrl = Context.User.GetAvatarUrl(ImageFormat.Gif),
+                        IconUrl = Context.User.GetAvatarUrl(ImageFormat.Auto),
                         Name = (Context.User as IGuildUser)?.Nickname ?? Context.User.Username
                     },
                     Description = content,
