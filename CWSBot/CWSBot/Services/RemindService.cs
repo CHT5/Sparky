@@ -82,7 +82,7 @@ namespace CWSBot.Services
                 Author = new EmbedAuthorBuilder
                 {
                     Name = user.Nickname ?? user.Username,
-                    IconUrl = user.GetAvatarUrl(ImageFormat.Gif)
+                    IconUrl = user.GetAvatarUrl(ImageFormat.Auto)
                 },
                 Description = content,
                 Color = user.GetRoleColor()
