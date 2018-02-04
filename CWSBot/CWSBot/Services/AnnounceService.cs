@@ -34,20 +34,22 @@ namespace CWSBot.Services
             => throw new NotSupportedException();
 
         public async Task HandleUserJoinedAsync(SocketGuildUser user)
-        {
+        { 
             var textChannels = user.Guild.TextChannels;
             var roles = user.Guild.Roles;
             var welcomeChannelPublic = textChannels.FirstOrDefault(x => x.Name == this._config["public_welcome_channel_name"]);
             var welcomeChannelMod = textChannels.FirstOrDefault(x => x.Name == this._config["mod_welcome_channel_name"]);
-            var learningRole = roles.FirstOrDefault(x => x.Name == this._config["learning_role_name"]);
+            //var learningRole = roles.FirstOrDefault(x => x.Name == this._config["learning_role_name"]);
             var botsRole = roles.FirstOrDefault(x => x.Name == this._config["bot_role_name"]);
 
             var userWelcomeText = new StringBuilder(user.IsBot ? "The Bot " : string.Empty);
             userWelcomeText.Append($"[{user.Username}] joined the server!");
 
-            var roleAddedText = new StringBuilder($"[{(user.IsBot ? botsRole.Name : learningRole.Name)}]");
+            var roleAddedText = new StringBuilder($"[{(user.IsBot ? botsRole.Name : string.Empty)}]");
             roleAddedText.Append($" has been assigned to [{user.Username}]!");
-            await user.AddRoleAsync(user.IsBot ? botsRole : learningRole);
+
+            if (user.IsBot)
+                await user.AddRoleAsync(botsRole);
 
             await welcomeChannelMod.SendMessageAsync(Format.Code(userWelcomeText.ToString(), FormatLang));
             await welcomeChannelPublic.SendMessageAsync(Format.Code(userWelcomeText.ToString(), FormatLang));

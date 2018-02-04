@@ -101,16 +101,16 @@ namespace CWSBot
 
         private IServiceProvider ConfigureServices()
             => new ServiceCollection()
-                .AddSingleton(_client)
                 .AddDbContext<CwsContext>()
-                .AddSingleton(_commands)
                 .AddSingleton(new NameService(_client))
-                .AddSingleton(_config)
                 .AddSingleton(new AnnounceService(_client, _config))
                 .AddSingleton(new RemindService(_client))
+                .AddSingleton(new MuteService(_client, _config))
                 .AddTransient<LogContext>()
                 .AddSingleton<InteractiveService>()
-                .AddSingleton(new MuteService(_client, _config))
+                .AddSingleton(_client)
+                .AddSingleton(_commands)
+                .AddSingleton(_config)
                 .BuildServiceProvider();
 
         public async Task InstallCommands()
