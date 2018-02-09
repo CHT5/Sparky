@@ -7,6 +7,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{88928324-2F1
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sparky", "src\Sparky\Sparky.csproj", "{93617212-A00E-4A78-BD0D-B364C1D2080A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sparky.Data", "src\Sparky.Data\Sparky.Data.csproj", "{37104C99-AC5D-428F-AA76-819AF52FB0F8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -32,8 +34,21 @@ Global
 		{93617212-A00E-4A78-BD0D-B364C1D2080A}.Release|x64.Build.0 = Release|x64
 		{93617212-A00E-4A78-BD0D-B364C1D2080A}.Release|x86.ActiveCfg = Release|x86
 		{93617212-A00E-4A78-BD0D-B364C1D2080A}.Release|x86.Build.0 = Release|x86
+		{37104C99-AC5D-428F-AA76-819AF52FB0F8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{37104C99-AC5D-428F-AA76-819AF52FB0F8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{37104C99-AC5D-428F-AA76-819AF52FB0F8}.Debug|x64.ActiveCfg = Debug|x64
+		{37104C99-AC5D-428F-AA76-819AF52FB0F8}.Debug|x64.Build.0 = Debug|x64
+		{37104C99-AC5D-428F-AA76-819AF52FB0F8}.Debug|x86.ActiveCfg = Debug|x86
+		{37104C99-AC5D-428F-AA76-819AF52FB0F8}.Debug|x86.Build.0 = Debug|x86
+		{37104C99-AC5D-428F-AA76-819AF52FB0F8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{37104C99-AC5D-428F-AA76-819AF52FB0F8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{37104C99-AC5D-428F-AA76-819AF52FB0F8}.Release|x64.ActiveCfg = Release|x64
+		{37104C99-AC5D-428F-AA76-819AF52FB0F8}.Release|x64.Build.0 = Release|x64
+		{37104C99-AC5D-428F-AA76-819AF52FB0F8}.Release|x86.ActiveCfg = Release|x86
+		{37104C99-AC5D-428F-AA76-819AF52FB0F8}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{93617212-A00E-4A78-BD0D-B364C1D2080A} = {88928324-2F18-4517-A13E-C19BF11B09FD}
+		{37104C99-AC5D-428F-AA76-819AF52FB0F8} = {88928324-2F18-4517-A13E-C19BF11B09FD}
 	EndGlobalSection
 EndGlobal

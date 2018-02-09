@@ -1,10 +1,13 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Sparky.Data;
 
 namespace Sparky
 {
@@ -33,10 +36,13 @@ namespace Sparky
             {
                 CaseSensitive = false,
                 EnableMentionPrefix = true,
-                StringPrefixes = new [] {this._config["prefix"]}
+                StringPrefixes = new [] {this._config["prefix"]},
+                Services = GetServices()
             });
 
             commands.RegisterCommands(Assembly.GetEntryAssembly());
+
+            Console.WriteLine(string.Join(", ", commands.RegisteredCommands.Select(x => x.Value.QualifiedName)));
 
             await client.ConnectAsync();
 
@@ -47,5 +53,9 @@ namespace Sparky
             => new ConfigurationBuilder().SetBasePath(Directory.GetCurrentDirectory())
                                          .AddJsonFile("Files/config.json")
                                          .Build();
+
+        private IServiceProvider GetServices()
+            => new ServiceCollection().AddDbContext<KarmaContext>(ServiceLifetime.Transient)
+                                      .BuildServiceProvider();
     }
 }
