@@ -3,13 +3,7 @@ config.json
 .vs/
 bin/
 obj/
-cws-bot.db
-CWSBot/CWSBot/Files/config.json
-
+CWSBot/
 *.db
-
 *.user
-
-CWSBot/CWSBot/Properties/PublishProfiles/FolderProfile\.pubxml
-
 *.bat
