@@ -1,0 +1,11 @@
+{
+    "token": "",
+    "prefix": "!",
+    "channels": {
+        "mod_log_channel_name": "mod_logs"
+    },
+    "emotes": {
+        "accepted_emoji_name": ":accepted:",
+        "denied_emoji_name": ":rejected:"
+    }
+}

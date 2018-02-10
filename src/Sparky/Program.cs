@@ -7,6 +7,9 @@ using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using NLog;
+using NLog.Extensions.Logging;
 using Sparky.Data;
 using Sparky.Services;
 
@@ -30,19 +33,43 @@ namespace Sparky
             this._client = new DiscordClient(new DiscordConfiguration{
                 TokenType = TokenType.Bot,
                 Token = this._config["token"],
-                LogLevel = LogLevel.Debug
+                LogLevel = DSharpPlus.LogLevel.Debug
             });
 
-            this._client.DebugLogger.LogMessageReceived += (sender, msg) => Console.WriteLine(msg.ToString());
+            var services = GetServices();
 
-            var auditLogService = new AuditLogService(_client, _config);
+            var discordLogger = services.GetService<ILogger<DiscordClient>>();
+
+            this._client.DebugLogger.LogMessageReceived += (sender, args) =>
+            {
+                switch (args.Level)
+                {
+                    case DSharpPlus.LogLevel.Info:
+                        discordLogger.LogInformation(args.Message);
+                        break;
+                    case DSharpPlus.LogLevel.Critical:
+                        discordLogger.LogCritical(args.Message);
+                        break;
+                    case DSharpPlus.LogLevel.Error:
+                        discordLogger.LogError(args.Message);
+                        break;
+                    case DSharpPlus.LogLevel.Warning:
+                        discordLogger.LogWarning(args.Message);
+                        break;
+                    case DSharpPlus.LogLevel.Debug:
+                        discordLogger.LogDebug(args.Message);
+                        break;
+                }
+            };
+
+            _ = services.GetService<AuditLogService>(); // Let it instanciate
 
             commands = this._client.UseCommandsNext(new CommandsNextConfiguration
             {
                 CaseSensitive = false,
                 EnableMentionPrefix = true,
                 StringPrefixes = new [] {this._config["prefix"]},
-                Services = GetServices()
+                Services = services
             });
 
             commands.RegisterCommands(Assembly.GetEntryAssembly());
@@ -58,10 +85,25 @@ namespace Sparky
                                          .Build();
 
         private IServiceProvider GetServices()
-            => new ServiceCollection().AddDbContext<KarmaContext>(ServiceLifetime.Transient)
-                                      .AddDbContext<ModLogContext>(ServiceLifetime.Transient)
-                                      .AddSingleton(_client)
-                                      .AddSingleton(_config)
-                                      .BuildServiceProvider();
+        {
+            var provider = new ServiceCollection().AddDbContext<KarmaContext>(ServiceLifetime.Transient)
+                                                  .AddDbContext<ModLogContext>(ServiceLifetime.Transient)
+                                                  .AddSingleton<ILoggerFactory, LoggerFactory>()
+                                                  .AddSingleton(typeof(ILogger<>), typeof(Logger<>))
+                                                  .AddLogging(x => x.AddNLog(new NLogProviderOptions
+                                                      {
+                                                          CaptureMessageTemplates = true,
+                                                          IgnoreEmptyEventId = true,
+                                                          CaptureMessageProperties = true
+                                                      }))
+                                                  .AddSingleton(_client)
+                                                  .AddSingleton(_config)
+                                                  .AddSingleton<AuditLogService>()
+                                                  .BuildServiceProvider();
+
+            var loggerFactory = provider.GetService<ILoggerFactory>();
+            loggerFactory.ConfigureNLog(Path.Combine(Directory.GetCurrentDirectory(), "Files", "nlog.config")); // The # in my path is kicking my butt
+            return provider;
+        }
     }
 }

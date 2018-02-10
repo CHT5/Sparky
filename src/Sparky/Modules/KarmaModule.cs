@@ -19,6 +19,12 @@ namespace Sparky.Modules
         [GroupCommand]
         public async Task RepAsync(CommandContext context, DiscordMember user)
         {
+            if (context.User.Id == user.Id || user.IsBot)
+            {
+                await context.Message.CreateReactionAsync(DeniedEmoji);
+                return;
+            }
+
             var requesteeInformation = this._karmaContext.GetKarmaInformation(context.User.Id);
 
             if (!requesteeInformation.CanGiveKarma)
@@ -56,7 +62,7 @@ namespace Sparky.Modules
                 Title = $"{requestedUser.Nickname ?? requestedUser.Username}",
                 Description = $"**Reputation:** {requestedInformation.KarmaCount}\n" +
                               $"**Last reputation given:** {requestedInformation.LastKarmaGivenAt.Humanize()}\n" +
-                              (requestedInformation.CanGiveKarma ? "**Can give reputation**" : $"Can give reputation in **{(DateTimeOffset.UtcNow - requestedInformation.NextKarmaAt.UtcDateTime).Humanize()}**")
+                              (requestedInformation.CanGiveKarma ? "**Can give reputation**" : $"Can give rep in **{(DateTimeOffset.UtcNow - requestedInformation.NextKarmaAt.UtcDateTime).Humanize()}**")
             };
 
             await context.RespondAsync("", embed: builder.Build());

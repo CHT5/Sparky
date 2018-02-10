@@ -8,6 +8,7 @@ using Microsoft.Extensions.Configuration;
 using Sparky.Data;
 using Humanizer;
 using System.Collections.Concurrent;
+using Microsoft.Extensions.Logging;
 
 namespace Sparky.Services
 {
@@ -20,17 +21,21 @@ namespace Sparky.Services
 
         private readonly ModLogContext _modLogContext;
 
+        private readonly ILogger _logger;
+
         private ConcurrentDictionary<DiscordMember, DiscordAuditLogEntry> _entryCache = new ConcurrentDictionary<DiscordMember, DiscordAuditLogEntry>();
 
-        public AuditLogService(DiscordClient client, IConfiguration config)
+        public AuditLogService(DiscordClient client, IConfiguration config, ILogger<AuditLogService> logger)
         {
             this._client = client;
             this._config = config;
             this._modLogContext = new ModLogContext();
+            this._logger = logger;
 
             this._client.GuildBanAdded += (args) => _ = Task.Run(() => QueryAuditLogsAsync(args.Guild, AuditLogActionType.Ban, args.Member).ConfigureAwait(false));
             this._client.GuildBanRemoved += (args) => _ = Task.Run(() => QueryAuditLogsAsync(args.Guild, AuditLogActionType.Unban, args.Member).ConfigureAwait(false));
             this._client.GuildMemberRemoved += (args) => _ = Task.Run(() => QueryAuditLogsAsync(args.Guild, AuditLogActionType.Kick, args.Member).ConfigureAwait(false));
+            this._logger.LogInformation("Events hooked");
         }
 
         private async Task QueryAuditLogsAsync(DiscordGuild guild, AuditLogActionType type, DiscordMember user = null)
@@ -93,7 +98,7 @@ namespace Sparky.Services
 
             var lastCaseNumber = this._modLogContext.GetLastCaseNumber();
 
-            var logChannel = guild.Channels.FirstOrDefault(x => x.Name == "mod_logs");
+            var logChannel = guild.Channels.FirstOrDefault(x => x.Name == _config["channels:mod_log_channel_name"]);
             var logEntry = $"**{type.Humanize()}** | Case {lastCaseNumber+1}\n" +
                            $"**User**: {user.Username}#{user.Discriminator} ({user.Id}) ({user.Mention})\n" +
                            $"**Reason**: {entry.Reason ?? "No reason provided"}\n" +
