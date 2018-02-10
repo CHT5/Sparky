@@ -8,6 +8,7 @@ using DSharpPlus.CommandsNext;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Sparky.Data;
+using Sparky.Services;
 
 namespace Sparky
 {
@@ -15,6 +16,8 @@ namespace Sparky
     {
         static Task Main()
             => new Program().StartAsync();
+
+        private DiscordClient _client;
 
         private IConfiguration _config;
 
@@ -24,15 +27,17 @@ namespace Sparky
         {
             this._config = GetConfiguration();
 
-            var client = new DiscordClient(new DiscordConfiguration{
+            this._client = new DiscordClient(new DiscordConfiguration{
                 TokenType = TokenType.Bot,
                 Token = this._config["token"],
                 LogLevel = LogLevel.Debug
             });
 
-            client.DebugLogger.LogMessageReceived += (sender, msg) => Console.WriteLine(msg.ToString());
+            this._client.DebugLogger.LogMessageReceived += (sender, msg) => Console.WriteLine(msg.ToString());
 
-            commands = client.UseCommandsNext(new CommandsNextConfiguration
+            var auditLogService = new AuditLogService(_client, _config);
+
+            commands = this._client.UseCommandsNext(new CommandsNextConfiguration
             {
                 CaseSensitive = false,
                 EnableMentionPrefix = true,
@@ -42,9 +47,7 @@ namespace Sparky
 
             commands.RegisterCommands(Assembly.GetEntryAssembly());
 
-            Console.WriteLine(string.Join(", ", commands.RegisteredCommands.Select(x => x.Value.QualifiedName)));
-
-            await client.ConnectAsync();
+            await this._client.ConnectAsync();
 
             await Task.Delay(-1);
         }
@@ -56,6 +59,9 @@ namespace Sparky
 
         private IServiceProvider GetServices()
             => new ServiceCollection().AddDbContext<KarmaContext>(ServiceLifetime.Transient)
+                                      .AddDbContext<ModLogContext>(ServiceLifetime.Transient)
+                                      .AddSingleton(_client)
+                                      .AddSingleton(_config)
                                       .BuildServiceProvider();
     }
 }

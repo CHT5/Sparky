@@ -11,7 +11,7 @@ namespace Sparky.Data
         private DbSet<KarmaUserModel> Users { get; set; }
 
         public KarmaContext()
-            => Database.EnsureCreated();
+            => this.Database.EnsureCreated();
 
         public KarmaInformation GetKarmaInformation(ulong userId)
         {
