@@ -7,5 +7,9 @@
     "emotes": {
         "accepted_emoji_name": ":accepted:",
         "denied_emoji_name": ":rejected:"
+    },
+    "roles": {
+        "admin": 11212121221,
+        "moderator": "mod"
     }
 }

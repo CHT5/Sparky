@@ -6,8 +6,9 @@ namespace Sparky.Data.Models
 {
     internal class ModLogModel : BaseModel
     {
-        //[DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public uint CaseNumber { get; set; }
+
+        public ulong GuildId { get; set; }
 
         public ModerationAction Action { get; set; }
 
@@ -19,7 +20,7 @@ namespace Sparky.Data.Models
 
         public ulong MessageId { get; set; }
 
-        public ulong ResponsibleUserId { get; set; }
+        public ulong? ResponsibleUserId { get; set; }
 
         public string Reason { get; set; }
 

@@ -18,7 +18,7 @@ namespace Sparky.Data
         public bool ModLogExists(int caseNumber)
             => ModLogs.Any(x => x.CaseNumber == caseNumber);
 
-        public bool TryAddModLog(ModerationAction action, string reason, ulong responsibleUser, ulong targetUser, ulong messageId, out ModLog modlog, ulong? auditLogId = null)
+        public bool TryAddModLog(ModerationAction action, string reason, ulong targetUser, ulong messageId, ulong guildId, out ModLog modlog, ulong? responsibleUser = null, ulong? auditLogId = null)
         {
             modlog = null;
 
@@ -33,7 +33,8 @@ namespace Sparky.Data
                 AuditLogId = auditLogId,
                 CreatedAt = DateTimeOffset.Now,
                 MessageId = messageId,
-                UserId = targetUser
+                UserId = targetUser,
+                GuildId = guildId
             });
 
             SaveChanges();

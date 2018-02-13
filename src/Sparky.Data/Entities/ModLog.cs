@@ -19,9 +19,13 @@ namespace Sparky.Data
 
         public ulong LogMessageId { get; }
 
-        public ulong ResponsibleModId { get; }
+        public ulong? ResponsibleModId { get; }
+
+        public ulong GuildId { get; }
 
         public string Reason { get; }
+
+        public ulong TargetUserId { get; }
 
         internal ModLog(ModLogContext context, ModLogModel model)
         {
@@ -34,6 +38,8 @@ namespace Sparky.Data
             this.LogMessageId = model.MessageId;
             this.ResponsibleModId = model.ResponsibleUserId;
             this.Reason = model.Reason;
+            this.GuildId = model.GuildId;
+            this.TargetUserId = model.UserId;
         }
 
         public ModLog Modify(Action<ModLogProperties> properties)
