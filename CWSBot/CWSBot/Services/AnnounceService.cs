@@ -39,13 +39,12 @@ namespace CWSBot.Services
             var roles = user.Guild.Roles;
             var welcomeChannelPublic = textChannels.FirstOrDefault(x => x.Name == this._config["public_welcome_channel_name"]);
             var welcomeChannelMod = textChannels.FirstOrDefault(x => x.Name == this._config["mod_welcome_channel_name"]);
-            //var learningRole = roles.FirstOrDefault(x => x.Name == this._config["learning_role_name"]);
             var botsRole = roles.FirstOrDefault(x => x.Name == this._config["bot_role_name"]);
 
             var userWelcomeText = new StringBuilder(user.IsBot ? "The Bot " : string.Empty);
             userWelcomeText.Append($"[{user.Username}] joined the server!");
 
-            var roleAddedText = new StringBuilder($"[{(user.IsBot ? botsRole.Name : string.Empty)}]");
+            var roleAddedText = new StringBuilder($"[{botsRole.Name}]");
             roleAddedText.Append($" has been assigned to [{user.Username}]!");
 
             if (user.IsBot)
@@ -53,7 +52,8 @@ namespace CWSBot.Services
 
             await welcomeChannelMod.SendMessageAsync(Format.Code(userWelcomeText.ToString(), FormatLang));
             await welcomeChannelPublic.SendMessageAsync(Format.Code(userWelcomeText.ToString(), FormatLang));
-            await welcomeChannelMod.SendMessageAsync(Format.Code(roleAddedText.ToString(), FormatLang));
+            if (user.IsBot)
+                await welcomeChannelMod.SendMessageAsync(Format.Code(roleAddedText.ToString(), FormatLang));
         }
 
         public async Task HandleUserLeftAsync(SocketGuildUser user)
