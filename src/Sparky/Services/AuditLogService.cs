@@ -39,6 +39,23 @@ namespace Sparky.Services
             this._client.GuildBanAdded += (args) => _ = Task.Run(() => QueryAuditLogsAsync(args.Guild, AuditLogActionType.Ban, args.Member).ConfigureAwait(false));
             this._client.GuildBanRemoved += (args) => _ = Task.Run(() => QueryAuditLogsAsync(args.Guild, AuditLogActionType.Unban, args.Member).ConfigureAwait(false));
             this._client.GuildMemberRemoved += (args) => _ = Task.Run(() => QueryAuditLogsAsync(args.Guild, AuditLogActionType.Kick, args.Member).ConfigureAwait(false));
+            this._client.GuildMemberUpdated += (args) => 
+            {
+                if (args.RolesBefore.SequenceEqual(args.RolesAfter))
+                    return Task.CompletedTask;
+
+                var roles = _config.GetSection("logroles").GetChildren().Select(x => x.Value);
+
+                var differenceAfter = args.RolesAfter.Where(x => !args.RolesBefore.Any(y => y.Id == x.Id));
+                var differenceBefore = args.RolesBefore.Where(x => !args.RolesAfter.Any(y => y.Id == x.Id));
+
+                var difference = differenceAfter.Concat(differenceBefore).Distinct();
+
+                if (difference.Any(x => roles.Any(y => y == x.Id.ToString() || y.ToLowerInvariant() == x.Name.ToLowerInvariant())))
+                    _ = Task.Run(() => QueryAuditLogsAsync(args.Guild, AuditLogActionType.MemberRoleUpdate, args.Member));
+
+                return Task.CompletedTask;
+            }; 
         }
 
         public async Task<bool> EditReasonAsync(DiscordUser user, string caseNumberString, string reason)
@@ -146,6 +163,23 @@ namespace Sparky.Services
                             else
                                 await LogModerationType(guild, user, kick, ModerationAction.Kick);
                         break;
+
+                    case DiscordAuditLogMemberUpdateEntry update:
+                            if ((update.AddedRoles?.Count ?? 0) != 0)
+                            {
+                                if (this._actionCache.TryGetValue((update.Target.Id, ModerationAction.SpecialRoleAdded), out var updateResult))
+                                    await LogModerationType(guild, user, update, ModerationAction.SpecialRoleAdded, updateResult.Responsible);
+                                else
+                                    await LogModerationType(guild, user, update, ModerationAction.SpecialRoleAdded);
+                            }
+                            else if ((update.RemovedRoles?.Count ?? 0) != 0)
+                            {
+                                if (this._actionCache.TryGetValue((update.Target.Id, ModerationAction.SpecialRoleRemoved), out var updateResult))
+                                    await LogModerationType(guild, user, update, ModerationAction.SpecialRoleRemoved, updateResult.Responsible);
+                                else
+                                    await LogModerationType(guild, user, update, ModerationAction.SpecialRoleRemoved);
+                            }
+                        break;
                 }
             }
         }
@@ -159,13 +193,20 @@ namespace Sparky.Services
 
             var lastCaseNumber = this._modLogContext.GetLastCaseNumber();
             var responsibleUser = responsible ?? entry.UserResponsible;
-            var logText = BuildAuditLogMessage(responsibleUser, user, type, lastCaseNumber+1, entry.Reason);
+            var roleName = string.Empty;
+
+            if (type == ModerationAction.SpecialRoleAdded)
+                roleName = (entry as DiscordAuditLogMemberUpdateEntry).AddedRoles.First().Name;
+            else if (type == ModerationAction.SpecialRoleRemoved)
+                roleName = (entry as DiscordAuditLogMemberUpdateEntry).RemovedRoles.First().Name;
+
+            var logText = BuildAuditLogMessage(responsibleUser, user, type, lastCaseNumber+1, entry.Reason, roleName);
             var logChannel = guild.Channels.FirstOrDefault(x => x.Name == _config["channels:mod_log_channel_name"]);
             var message = await logChannel.SendMessageAsync(logText);
             this._modLogContext.TryAddModLog(type, entry.Reason, user.Id, message.Id, guild.Id, out _, (entry.UserResponsible.Id == this._client.CurrentUser.Id ? responsible?.Id : entry.UserResponsible.Id), entry.Id);
         }
 
-        private string BuildAuditLogMessage(DiscordUser responsibleUser, DiscordUser target, ModerationAction type, uint caseNumber, string reason = null)
+        private string BuildAuditLogMessage(DiscordUser responsibleUser, DiscordUser target, ModerationAction type, uint caseNumber, string reason = null, string roleName = null)
         {
             var responsibleText = string.Empty;
             if (responsibleUser.Id != this._client.CurrentUser.Id)
@@ -173,7 +214,7 @@ namespace Sparky.Services
             else
                 responsibleText = $"**Responsible staff member**: _Responsible moderator, please type `{_config["prefix"]}sign {caseNumber}`_";
 
-            var logEntry = $"**{type.Humanize()}** | Case {caseNumber}\n" +
+            var logEntry = $"**{type.Humanize()}{(!string.IsNullOrEmpty(roleName) ? $": {roleName}" : string.Empty)}** | Case {caseNumber}\n" +
                            $"**User**: {target.Username}#{target.Discriminator} ({target.Id}) ({target.Mention})\n" +
                            $"**Reason**: {reason ?? $"_Responsible moderator, please type `{_config["prefix"]}reason {caseNumber} <reason>`_"}\n" +
                            responsibleText;

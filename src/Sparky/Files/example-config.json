@@ -11,5 +11,6 @@
     "roles": {
         "admin": 11212121221,
         "moderator": "mod"
-    }
+    },
+    "logroles": ["somerole", 224234343242, "someotherole", "evenotherrole"]
 }

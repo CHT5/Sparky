@@ -5,6 +5,8 @@ namespace Sparky.Data
         Kick,
         Ban,
         Softban,
-        Unban
+        Unban,
+        SpecialRoleAdded,
+        SpecialRoleRemoved
     }
 }
