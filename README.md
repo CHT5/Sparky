@@ -27,4 +27,4 @@ $ dotnet restore
 ## License
 This project uses the MIT license, see the [LICENSE](LICENSE.md) file for details, or click [here](https://choosealicense.com/licenses/mit/).
 
-[![CodeForge Invite](https://discordapp.com/api/guilds/275377268728135680/embed.png?style=banner1)(https://discord.gg/hKqrgwe)]
+[![CodeForge Invite](https://discordapp.com/api/guilds/275377268728135680/embed.png?style=banner1)](https://discord.gg/hKqrgwe)
