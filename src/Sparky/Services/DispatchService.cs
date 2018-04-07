@@ -180,28 +180,6 @@ namespace Sparky.Services
             QueryDatabases();
 
             return Task.CompletedTask;
-            if (result.DispatchType == DispatchType.Cancelled) // Dispatch was cancelled, no need to handle it
-                return Task.CompletedTask;
-
-            switch (result)
-            {
-                case BanDispatchResult banDispatch:
-                    return HandleBanDispatch(banDispatch);
-            }
-        }
-
-        private async Task HandleBanDispatch(BanDispatchResult dispatch)
-        {
-            using (var context = new ModLogContext())
-            {
-                context.AddModLog<ModLogCreationProperties>((x) => 
-                {
-                    x.Action = ModerationAction.Unban;
-                    x.AuditLogId = null;
-                    x.GuildId = dispatch.ModLogEntry.GuildId;
-                    x.Reason = $"";
-                });
-            }
         }
     }
 }
