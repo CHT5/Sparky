@@ -10,7 +10,9 @@
     },
     "roles": {
         "admin": 11212121221,
-        "moderator": "mod"
+        "moderator": "mod",
+        "warning": "warning",
+        "muted": "muted"
     },
-    "logroles": ["somerole", 224234343242, "someotherole", "evenotherrole"]
+    "logroles": ["warning", "muted", 224234343242, "someotherole", "evenotherrole"]
 }

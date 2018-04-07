@@ -1,3 +1,5 @@
+using Sparky.Data.Attributes;
+
 namespace Sparky.Data
 {
     public enum ModerationAction
@@ -7,6 +9,11 @@ namespace Sparky.Data
         Softban,
         Unban,
         SpecialRoleAdded,
-        SpecialRoleRemoved
+        SpecialRoleRemoved,
+
+        [TemporaryModAction]
+        TemporarySpecialRoleAdded,
+        [TemporaryModAction]
+        TemporaryBan
     }
 }

@@ -3,21 +3,25 @@ using Sparky.Data.Models;
 
 namespace Sparky.Data
 {
-    public class ModLog
+    public class ModLogEntry
     {
-        private readonly ModLogContext _context;
+        private protected readonly ModLogContext _context;
 
-        private readonly ModLogModel _model;
+        private protected readonly ModLogModel _model;
 
         public uint CaseNumber { get; }
 
+        public DateTimeOffset CreatedAt { get; }
+
         public ModerationAction Action { get; }
 
-        public DateTimeOffset CreatedAt { get; }
+        public string TargetUsername { get; }
+
+        public string TargetDiscriminator { get; }
 
         public ulong? AuditLogId { get; }
 
-        public ulong LogMessageId { get; }
+        public ulong? LogMessageId { get; }
 
         public ulong? ResponsibleModId { get; }
 
@@ -27,7 +31,9 @@ namespace Sparky.Data
 
         public ulong TargetUserId { get; }
 
-        internal ModLog(ModLogContext context, ModLogModel model)
+        public ulong? RoleAdded { get; }
+
+        internal ModLogEntry(ModLogContext context, ModLogModel model)
         {
             this._context = context;
             this._model = model;
@@ -40,9 +46,12 @@ namespace Sparky.Data
             this.Reason = model.Reason;
             this.GuildId = model.GuildId;
             this.TargetUserId = model.UserId;
+            this.RoleAdded = model.RoleAdded;
+            this.TargetDiscriminator = model.TargetDiscriminator;
+            this.TargetUsername = model.TargetUsername;
         }
 
-        public ModLog Modify(Action<ModLogProperties> properties)
+        public virtual ModLogEntry Modify(Action<ModLogProperties> properties)
         {
             var props = new ModLogProperties();
             properties(props);
@@ -53,9 +62,12 @@ namespace Sparky.Data
             if (props.Reason != null)
                 this._model.Reason = props.Reason;
 
+            if (props.ModLogMessageId != null)
+                this._model.MessageId = props.ModLogMessageId;
+
             this._context.SaveChanges();
 
-            return new ModLog(this._context, this._model);
+            return new ModLogEntry(this._context, this._model);
         }
     }
 
@@ -64,6 +76,8 @@ namespace Sparky.Data
         public ulong? ResponsibleModId { get; set; }
 
         public string Reason { get; set; }
+
+        public ulong? ModLogMessageId { get; set; }
 
         internal ModLogProperties()
         {}

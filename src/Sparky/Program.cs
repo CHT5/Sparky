@@ -29,40 +29,41 @@ namespace Sparky
         private async Task StartAsync()
         {
             this._config = GetConfiguration();
-
             this._client = new DiscordClient(new DiscordConfiguration{
                 TokenType = TokenType.Bot,
                 Token = this._config["token"],
                 LogLevel = DSharpPlus.LogLevel.Debug
             });
-
             var services = GetServices();
 
             var discordLogger = services.GetService<ILogger<DiscordClient>>();
-
             this._client.DebugLogger.LogMessageReceived += (sender, args) =>
             {
                 switch (args.Level)
                 {
                     case DSharpPlus.LogLevel.Info:
                         discordLogger.LogInformation(args.Message);
-                        break;
+                        return;
                     case DSharpPlus.LogLevel.Critical:
                         discordLogger.LogCritical(args.Message);
-                        break;
+                        return;
                     case DSharpPlus.LogLevel.Error:
                         discordLogger.LogError(args.Message);
-                        break;
+                        return;
                     case DSharpPlus.LogLevel.Warning:
                         discordLogger.LogWarning(args.Message);
-                        break;
+                        return;
                     case DSharpPlus.LogLevel.Debug:
                         discordLogger.LogDebug(args.Message);
-                        break;
+                        return;
                 }
+
+                discordLogger.LogDebug(args.Message);
             };
 
-            _ = services.GetService<AuditLogService>(); // Let it instanciate
+            var auditLogService = services.GetService<AuditLogService>(); // Let it instanciate
+            var dispatchService = services.GetService<DispatchService>();
+            auditLogService.AddDispatchService(dispatchService);
 
             commands = this._client.UseCommandsNext(new CommandsNextConfiguration
             {
@@ -99,6 +100,7 @@ namespace Sparky
                                                   .AddSingleton(_client)
                                                   .AddSingleton(_config)
                                                   .AddSingleton<AuditLogService>()
+                                                  .AddSingleton<DispatchService>()
                                                   .BuildServiceProvider();
 
             var loggerFactory = provider.GetService<ILoggerFactory>();

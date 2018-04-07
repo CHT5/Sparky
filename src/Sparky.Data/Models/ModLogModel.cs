@@ -10,19 +10,25 @@ namespace Sparky.Data.Models
 
         public ulong GuildId { get; set; }
 
-        public ModerationAction Action { get; set; }
-
         public DateTimeOffset CreatedAt { get; set; }
 
         public ulong? AuditLogId { get; set; }
 
+        public ModerationAction Action { get; set; }
+
         public ulong UserId { get; set; }
 
-        public ulong MessageId { get; set; }
+        public ulong? MessageId { get; set; }
 
         public ulong? ResponsibleUserId { get; set; }
 
+        public ulong? RoleAdded { get; set; }
+
         public string Reason { get; set; }
+
+        public string TargetUsername { get; set; }
+
+        public string TargetDiscriminator { get; set; }
 
         public override void ConfigureModel(ModelBuilder builder)
         {
@@ -36,6 +42,8 @@ namespace Sparky.Data.Models
                   .ValueGeneratedNever();
             entity.Property(x => x.ResponsibleUserId)
                   .ValueGeneratedNever();
+            builder.Entity<PermaModLogModel>().HasBaseType<ModLogModel>();
+            builder.Entity<TimedModLogModel>().HasBaseType<ModLogModel>();
         }
     }
 }

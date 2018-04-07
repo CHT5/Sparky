@@ -7,7 +7,7 @@ namespace Sparky.Data
 {
     public class ModLogContext : DbContext
     {
-        private DbSet<ModLogModel> ModLogs { get; set; }
+        internal DbSet<ModLogModel> ModLogs { get; set; }
 
         public ModLogContext()
             => this.Database.EnsureCreated();
@@ -18,40 +18,92 @@ namespace Sparky.Data
         public bool ModLogExists(int caseNumber)
             => ModLogs.Any(x => x.CaseNumber == caseNumber);
 
-        public bool TryAddModLog(ModerationAction action, string reason, ulong targetUser, ulong messageId, ulong guildId, out ModLog modlog, ulong? responsibleUser = null, ulong? auditLogId = null)
+        public ModLogEntry AddModLog<T>(Action<T> properties)
+            where T: ModLogCreationProperties
         {
-            modlog = null;
+            var props = Activator.CreateInstance(typeof(T)) as T;
 
-            if (auditLogId.HasValue && ModLogExists(auditLogId.Value))
-                return false;
+            properties(props);
 
-            var log = ModLogs.Add(new ModLogModel
+            if (props.AuditLogId.HasValue && ModLogExists(props.AuditLogId.Value))
+                return null;
+
+            ModLogModel rawLog;
+
+            switch (props)
             {
-                Action = action,
-                Reason = reason,
-                ResponsibleUserId = responsibleUser,
-                AuditLogId = auditLogId,
-                CreatedAt = DateTimeOffset.Now,
-                MessageId = messageId,
-                UserId = targetUser,
-                GuildId = guildId
-            });
+                case TimedModLogCreationProperties timedProps:
+                    rawLog = new TimedModLogModel
+                    {
+                        Action = timedProps.Action,
+                        Reason = timedProps.Reason,
+                        ResponsibleUserId = timedProps.ResponsibleUserId,
+                        AuditLogId = timedProps.AuditLogId,
+                        CreatedAt = DateTimeOffset.Now,
+                        UserId = timedProps.UserId,
+                        GuildId = timedProps.GuildId,
+                        RoleAdded = timedProps.RoleAdded,
+                        EndsAt = timedProps.EndsAt,
+                        TargetDiscriminator = timedProps.TargetDiscriminator,
+                        TargetUsername = timedProps.TargetUsername,
+
+                    };
+                break;
+
+                default:
+                    rawLog = new PermaModLogModel
+                    {
+                        Action = props.Action,
+                        Reason = props.Reason,
+                        ResponsibleUserId = props.ResponsibleUserId,
+                        AuditLogId = props.AuditLogId,
+                        CreatedAt = DateTimeOffset.Now,
+                        UserId = props.UserId,
+                        GuildId = props.GuildId,
+                        RoleAdded = props.RoleAdded,
+                        TargetDiscriminator = props.TargetDiscriminator,
+                        TargetUsername = props.TargetUsername,
+                    };
+                break;
+            }
+
+            var resLog = ModLogs.Add(rawLog);
 
             SaveChanges();
 
-            modlog = new ModLog(this, log.Entity);
-
-            return true;
+            return GetModLog((int)resLog.Entity.CaseNumber);
         }
 
         public uint GetLastCaseNumber()
             => this.ModLogs.LastOrDefault()?.CaseNumber ?? 0;
 
-        public ModLog GetModLog(int caseNumber)
+        public ModLogEntry GetModLog(int caseNumber)
         {
             var result = ModLogs.FirstOrDefault(x => x.CaseNumber == caseNumber);
 
-            return new ModLog(this, result);
+            switch (result)
+            {
+                case TimedModLogModel timed:
+                    return new TimedModLogEntry(new ModLogContext(), timed);
+
+                case PermaModLogModel perma:
+                    return new PermaModLogEntry(new ModLogContext(), perma);
+
+                default:
+                    return new ModLogEntry(new ModLogContext(), result);
+            }
+        }
+
+        public bool TryGetNextModLog(out TimedModLogEntry entry, ModerationAction? action = null)
+        {
+            var results = ModLogs.Where(x => x is TimedModLogModel).OrderByDescending(x => (x as TimedModLogModel).EndsAt);
+            var result = results.FirstOrDefault(x => x.Action == action && !(x as TimedModLogModel).Completed);
+            if (result != null)
+                entry = new TimedModLogEntry(new ModLogContext(), result as TimedModLogModel);
+            else
+                entry = null;
+
+            return result != null;
         }
 
         protected override void OnModelCreating(ModelBuilder builder)

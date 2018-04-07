@@ -25,15 +25,17 @@ namespace Sparky.Services
 
         private readonly ILogger _logger;
 
+        private DispatchService _dispatchService;
+
         private ConcurrentDictionary<DiscordMember, DiscordAuditLogEntry> _entryCache = new ConcurrentDictionary<DiscordMember, DiscordAuditLogEntry>();
 
         private ConcurrentDictionary<(ulong, ModerationAction), PendingModerationAction> _actionCache = new ConcurrentDictionary<(ulong, ModerationAction), PendingModerationAction>();
 
-        public AuditLogService(DiscordClient client, IConfiguration config, ILogger<AuditLogService> logger)
+        public AuditLogService(DiscordClient client, IConfiguration config, ILogger<AuditLogService> logger, ModLogContext modLogContext)
         {
             this._client = client;
             this._config = config;
-            this._modLogContext = new ModLogContext();
+            this._modLogContext = modLogContext;
             this._logger = logger;
 
             this._client.GuildBanAdded += (args) => _ = Task.Run(() => QueryAuditLogsAsync(args.Guild, AuditLogActionType.Ban, args.Member).ConfigureAwait(false));
@@ -42,12 +44,12 @@ namespace Sparky.Services
             this._client.GuildMemberUpdated += (args) => 
             {
                 if (args.RolesBefore.SequenceEqual(args.RolesAfter))
-                    return Task.CompletedTask;
+                    return Task.CompletedTask; // roles didn't change, no action to take
 
                 var roles = _config.GetSection("logroles").GetChildren().Select(x => x.Value);
 
-                var differenceAfter = args.RolesAfter.Where(x => !args.RolesBefore.Any(y => y.Id == x.Id));
-                var differenceBefore = args.RolesBefore.Where(x => !args.RolesAfter.Any(y => y.Id == x.Id));
+                var differenceAfter = args.RolesAfter.Where(x => !args.RolesBefore.Any(y => y.Id == x.Id)); // Get all distinct new roles
+                var differenceBefore = args.RolesBefore.Where(x => !args.RolesAfter.Any(y => y.Id == x.Id)); // Get all distinct old roles
 
                 var difference = differenceAfter.Concat(differenceBefore).Distinct();
 
@@ -76,7 +78,7 @@ namespace Sparky.Services
 
             var guild = await this._client.GetGuildAsync(modLog.GuildId);
             var channel = guild?.Channels?.FirstOrDefault(x => x?.Name == _config["channels:mod_log_channel_name"]);
-            var message = await channel?.GetMessageAsync(modLog.LogMessageId);
+            var message = await channel?.GetMessageAsync(modLog.LogMessageId ?? 0);
             if (message is null)
                 return false;
 
@@ -86,8 +88,8 @@ namespace Sparky.Services
 
             var target = await this._client.GetUserAsync(modLog.TargetUserId);
 
-            var messageContent = BuildAuditLogMessage(responsibleUser, target, modLog.Action, modLog.CaseNumber, modLog.Reason);
-
+            var messageContent = await modLog.GenerateMessageAsync(this._client, this._config);
+            
             await message.ModifyAsync(messageContent);
 
             return true;
@@ -99,7 +101,7 @@ namespace Sparky.Services
         private async Task QueryAuditLogsAsync(DiscordGuild guild, AuditLogActionType type, DiscordMember user = null)
         {
             await Task.Delay(500); // wait for the action cache to be updated
-            var logs = await guild.GetAuditLogsAsync(1, null, type);
+            var logs = await guild.GetAuditLogsAsync(1, null, type).ConfigureAwait(false);
 
             foreach (var log in logs)
             {
@@ -111,12 +113,15 @@ namespace Sparky.Services
                             if (_entryCache.TryGetValue(user, out DiscordAuditLogEntry entry))
                                 return; // If this happens it means that the user was softbanned, no need to log the unban
 
-                            if (this._actionCache.TryGetValue((ban.Target.Id, ModerationAction.Unban), out var resultUnban))
-                                await LogModerationType(guild, user, ban, ModerationAction.Unban, resultUnban.Responsible);
-                            else
                                 await LogModerationType(guild, user, ban, ModerationAction.Unban);
                             return;
                         }
+
+                        int waitingTime = 30000;
+
+                        if (_actionCache.TryGetValue((user.Id, ModerationAction.Ban), out _) ||
+                            _actionCache.TryGetValue((user.Id, ModerationAction.TemporaryBan), out _))
+                            waitingTime = 1000;
 
                         _entryCache.TryAdd(user, ban);
 
@@ -131,94 +136,120 @@ namespace Sparky.Services
 
                             return Task.CompletedTask;
                         };
+
                         try
                         {
-                            await Task.Delay(30*1000, cancelToken.Token);
+                            await Task.Delay(waitingTime, cancelToken.Token);
                         }
                         catch
                         {}
 
                         if (unbanned)
-                        {
-                            if (this._actionCache.TryGetValue((ban.Target.Id, ModerationAction.Softban), out var softBanResult))
-                                await LogModerationType(guild, user, ban, ModerationAction.Softban, softBanResult.Responsible);
-                            else
-                                await LogModerationType(guild, user, ban, ModerationAction.Softban);
-
-                        }
+                            await LogModerationType(guild, user, ban, ModerationAction.Softban);
                         else
-                        {
-                            if (this._actionCache.TryGetValue((ban.Target.Id, ModerationAction.Ban), out var banResult))
-                                await LogModerationType(guild, user, ban, ModerationAction.Ban, banResult.Responsible);
-                            else
-                                await LogModerationType(guild, user, ban, ModerationAction.Ban);
-                        }
-
+                            await LogModerationType(guild, user, ban, IsTemporary(ban) ? ModerationAction.TemporaryBan : ModerationAction.Ban);
+                        
                         _entryCache.Remove(user, out _);
                         break;
 
                     case DiscordAuditLogKickEntry kick:
-                        if (this._actionCache.TryGetValue((kick.Target.Id, ModerationAction.Kick), out var result))
-                                await LogModerationType(guild, user, kick, ModerationAction.Kick, result.Responsible);
-                            else
-                                await LogModerationType(guild, user, kick, ModerationAction.Kick);
+                            await LogModerationType(guild, user, kick, ModerationAction.Kick);
                         break;
 
                     case DiscordAuditLogMemberUpdateEntry update:
-                            if ((update.AddedRoles?.Count ?? 0) != 0)
-                            {
-                                if (this._actionCache.TryGetValue((update.Target.Id, ModerationAction.SpecialRoleAdded), out var updateResult))
-                                    await LogModerationType(guild, user, update, ModerationAction.SpecialRoleAdded, updateResult.Responsible);
-                                else
-                                    await LogModerationType(guild, user, update, ModerationAction.SpecialRoleAdded);
-                            }
+                            if ((update.AddedRoles?.Count ?? 0) != 0) // :)
+                                await LogModerationType(guild, user, update, IsTemporary(update) ? ModerationAction.TemporarySpecialRoleAdded : ModerationAction.SpecialRoleAdded);
                             else if ((update.RemovedRoles?.Count ?? 0) != 0)
-                            {
-                                if (this._actionCache.TryGetValue((update.Target.Id, ModerationAction.SpecialRoleRemoved), out var updateResult))
-                                    await LogModerationType(guild, user, update, ModerationAction.SpecialRoleRemoved, updateResult.Responsible);
-                                else
-                                    await LogModerationType(guild, user, update, ModerationAction.SpecialRoleRemoved);
-                            }
+                                await LogModerationType(guild, user, update, ModerationAction.SpecialRoleRemoved);
                         break;
                 }
             }
         }
 
-        private async Task LogModerationType(DiscordGuild guild, DiscordMember user, DiscordAuditLogEntry entry, ModerationAction type, DiscordMember responsible = null)
+        public void AddDispatchService(DispatchService service)
+            => this._dispatchService = this._dispatchService ?? service; // Prevent from overwriting
+
+        private bool IsTemporary(DiscordAuditLogEntry auditLogEntry)
+            => auditLogEntry.Reason?.Contains("Temporary") ?? false;
+
+        private async Task LogModerationType(DiscordGuild guild, DiscordMember user, DiscordAuditLogEntry entry, ModerationAction type)
         {
             if (this._modLogContext.ModLogExists(entry.Id))
                 return;
 
-            this._actionCache.TryRemove((user.Id, type), out _);
+            this._actionCache.TryRemove((user.Id, type), out var modAction);
 
             var lastCaseNumber = this._modLogContext.GetLastCaseNumber();
-            var responsibleUser = responsible ?? entry.UserResponsible;
+            var responsibleUser = modAction?.Responsible ?? entry.UserResponsible;
             var roleName = string.Empty;
+            ulong? roleId = null;
 
-            if (type == ModerationAction.SpecialRoleAdded)
-                roleName = (entry as DiscordAuditLogMemberUpdateEntry).AddedRoles.First().Name;
+            if (type == ModerationAction.SpecialRoleAdded || type == ModerationAction.TemporarySpecialRoleAdded)
+            {
+                var role = (entry as DiscordAuditLogMemberUpdateEntry).AddedRoles.First();
+                roleName = role.Name;
+                roleId = role.Id;
+            }
             else if (type == ModerationAction.SpecialRoleRemoved)
                 roleName = (entry as DiscordAuditLogMemberUpdateEntry).RemovedRoles.First().Name;
 
-            var logText = BuildAuditLogMessage(responsibleUser, user, type, lastCaseNumber+1, entry.Reason, roleName);
-            var logChannel = guild.Channels.FirstOrDefault(x => x.Name == _config["channels:mod_log_channel_name"]);
-            var message = await logChannel.SendMessageAsync(logText);
-            this._modLogContext.TryAddModLog(type, entry.Reason, user.Id, message.Id, guild.Id, out _, (entry.UserResponsible.Id == this._client.CurrentUser.Id ? responsible?.Id : entry.UserResponsible.Id), entry.Id);
-        }
+            ModLogEntry modLogEntry = null;
 
-        private string BuildAuditLogMessage(DiscordUser responsibleUser, DiscordUser target, ModerationAction type, uint caseNumber, string reason = null, string roleName = null)
-        {
-            var responsibleText = string.Empty;
-            if (responsibleUser.Id != this._client.CurrentUser.Id)
-                responsibleText = $"**Responsible staff member**: {responsibleUser.Username}#{responsibleUser.Discriminator}";
+            if (type.IsTemporary())
+            {
+                modLogEntry = this._modLogContext.AddModLog<TimedModLogCreationProperties>((timed) => 
+                {
+                    timed.Action = type;
+                    timed.Reason = entry.Reason;
+                    timed.UserId = user.Id;
+                    timed.GuildId = guild.Id;
+                    timed.EndsAt = modAction.EndsAt.Value;
+                    timed.AuditLogId = entry.Id;
+                    timed.RoleAdded = roleId;
+
+                    if (entry.UserResponsible.Id == this._client.CurrentUser.Id)
+                    {
+                        timed.ResponsibleUserId = modAction.Responsible.Id;
+                        timed.TargetDiscriminator = modAction.Target.Discriminator;
+                        timed.TargetUsername = modAction.Target.Username;
+                    }
+                    else
+                    {
+                        timed.ResponsibleUserId = entry.UserResponsible.Id;
+                        timed.TargetDiscriminator = user.Discriminator;
+                        timed.TargetUsername = user.Username;
+                    }
+                });
+
+                this._dispatchService.TryEnqueueModAction(modLogEntry as TimedModLogEntry);
+            }
             else
-                responsibleText = $"**Responsible staff member**: _Responsible moderator, please type `{_config["prefix"]}sign {caseNumber}`_";
+            {
+                modLogEntry = this._modLogContext.AddModLog<ModLogCreationProperties>((timed) => 
+                {
+                    timed.Action = type;
+                    timed.Reason = entry.Reason;
+                    timed.UserId = user.Id;
+                    timed.GuildId = guild.Id;
+                    timed.AuditLogId = entry.Id;
+                    timed.RoleAdded = roleId;
 
-            var logEntry = $"**{type.Humanize()}{(!string.IsNullOrEmpty(roleName) ? $": {roleName}" : string.Empty)}** | Case {caseNumber}\n" +
-                           $"**User**: {target.Username}#{target.Discriminator} ({target.Id}) ({target.Mention})\n" +
-                           $"**Reason**: {reason ?? $"_Responsible moderator, please type `{_config["prefix"]}reason {caseNumber} <reason>`_"}\n" +
-                           responsibleText;
-            return logEntry;
+                    if (entry.UserResponsible.Id == this._client.CurrentUser.Id)
+                    {
+                        timed.ResponsibleUserId = modAction.Responsible.Id;
+                        timed.TargetDiscriminator = modAction.Target.Discriminator;
+                        timed.TargetUsername = modAction.Target.Username;
+                    }
+                    else
+                    {
+                        timed.ResponsibleUserId = entry.UserResponsible.Id;
+                        timed.TargetDiscriminator = user.Discriminator;
+                        timed.TargetUsername = user.Username;
+                    }
+                });
+            }
+
+            await modLogEntry.SendLogAsync(guild, this._config, this._client);
         }
     }
 }

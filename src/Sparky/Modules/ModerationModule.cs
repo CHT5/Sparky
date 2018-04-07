@@ -15,8 +15,13 @@ namespace Sparky.Modules
     {
         private readonly AuditLogService _auditLogService;
 
-        public ModerationModule(AuditLogService auditLogService)
-            => this._auditLogService = auditLogService;
+        private readonly DispatchService _dispatchService;
+
+        public ModerationModule(AuditLogService auditLogService, DispatchService dispatchService)
+        {
+            this._auditLogService = auditLogService;
+            this._dispatchService = dispatchService;
+        }
 
         [Command("reason")]
         [RequireConfiguredRole(RoleCheckMode.Any, "roles:admin", "roles:moderator")]
@@ -83,6 +88,23 @@ namespace Sparky.Modules
             {
                 await member.BanAsync(pruneDays, reason);
                 var modAction = new PendingModerationAction(ModerationAction.Ban, context.User as DiscordMember, member);
+                this._auditLogService.AddPendingModerationAction(modAction);
+                await context.Message.CreateReactionAsync(AcceptedEmoji);
+            }
+            catch
+            {
+                await context.Message.CreateReactionAsync(DeniedEmoji);
+            }
+        }
+
+        [Command("tempban")]
+        [RequireUserPermissions(Permissions.BanMembers)]
+        public async Task TempBanAsync(CommandContext context, DiscordMember member, int time, [RemainingText] string reason = null)
+        {
+            try
+            {
+                await member.BanAsync(7, $"{reason} (Temporary)");
+                var modAction = new PendingModerationAction(ModerationAction.TemporaryBan, context.User as DiscordMember, member, DateTimeOffset.Now.Add(TimeSpan.FromMinutes(time)));
                 this._auditLogService.AddPendingModerationAction(modAction);
                 await context.Message.CreateReactionAsync(AcceptedEmoji);
             }

@@ -1,21 +1,25 @@
+using System;
 using DSharpPlus.Entities;
 using Sparky.Data;
 
 namespace Sparky.Objects
 {
-    public struct PendingModerationAction
+    public class PendingModerationAction
     {
         public ModerationAction Action { get; }
 
-        public DiscordMember Responsible { get; }
+        public DiscordUser Responsible { get; }
 
-        public DiscordMember Target { get; }
+        public DiscordUser Target { get; }
 
-        public PendingModerationAction(ModerationAction action, DiscordMember responsible, DiscordMember target)
+        public DateTimeOffset? EndsAt { get; }
+
+        public PendingModerationAction(ModerationAction action, DiscordUser responsible, DiscordUser target, DateTimeOffset? endsAt = null)
         {
             this.Action = action;
             this.Responsible = responsible;
             this.Target = target;
+            this.EndsAt = endsAt;
         }
     }
 }
