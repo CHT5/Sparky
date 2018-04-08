@@ -99,12 +99,12 @@ namespace Sparky.Modules
 
         [Command("tempban")]
         [RequireUserPermissions(Permissions.BanMembers)]
-        public async Task TempBanAsync(CommandContext context, DiscordMember member, int time, [RemainingText] string reason = null)
+        public async Task TempBanAsync(CommandContext context, DiscordUser user, TimeSpan time, [RemainingText] string reason = null)
         {
             try
             {
-                await member.BanAsync(7, $"{reason} (Temporary)");
-                var modAction = new PendingModerationAction(ModerationAction.TemporaryBan, context.User as DiscordMember, member, DateTimeOffset.Now.Add(TimeSpan.FromMinutes(time)));
+                await context.Guild.BanMemberAsync(user.Id, 7, reason);
+                var modAction = new PendingModerationAction(ModerationAction.TemporaryBan, context.User, user, DateTimeOffset.Now.Add(time));
                 this._auditLogService.AddPendingModerationAction(modAction);
                 await context.Message.CreateReactionAsync(AcceptedEmoji);
             }

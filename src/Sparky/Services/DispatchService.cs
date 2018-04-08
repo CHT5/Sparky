@@ -34,7 +34,8 @@ namespace Sparky.Services
             this._logger = logger;
             this._auditLogService = auditLogService;
             this._currentDispatchTasks = new ConcurrentDictionary<Type, TimedDispatchTask>();
-            client.Ready += _ => {
+            client.Ready += _ =>
+            {
                 if (!this._initalQueryDone)
                 {
                     QueryDatabases();
@@ -92,7 +93,6 @@ namespace Sparky.Services
                 }
 
                 timedTask.Start();
-                _logger.LogDebug("Started task");
                 return timedTask;
             }).DueTo == timedTask.DueTo;
         }
@@ -121,7 +121,6 @@ namespace Sparky.Services
                 case ModerationAction.TemporaryBan:
                     return new TimedBanDispatchTask(async cancelToken => 
                     {
-                        _logger.LogDebug("Entered task");
                         if (!await TryWaitUntilFinishedAsync(modLogEntry.EndsAt - DateTimeOffset.Now, cancelToken))
                             return BanDispatchResult.FromCancelled(modLogEntry);
 

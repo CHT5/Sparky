@@ -5,6 +5,8 @@ using System.Reflection;
 using System.Threading.Tasks;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
+using DSharpPlus.CommandsNext.Converters;
+using DSharpPlus.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -74,6 +76,24 @@ namespace Sparky
             });
 
             commands.RegisterCommands(Assembly.GetEntryAssembly());
+            commands.RegisterConverter<TimeSpan>(new TimeSpanConverter());
+            commands.CommandErrored += async (args) => 
+            {
+                discordLogger.LogError(args.Exception, $"The Command {args.Command.QualifiedName} errored: ");
+
+                DiscordEmoji denied;
+
+                try
+                {
+                    denied = DiscordGuildEmoji.FromName(args.Context.Client, _config["emotes:denied_emoji_name"]);
+                }
+                catch
+                {
+                    denied = DiscordEmoji.FromName(args.Context.Client, ":x:");
+                }
+
+                await args.Context.Message.CreateReactionAsync(denied);
+            };
 
             await this._client.ConnectAsync();
 
