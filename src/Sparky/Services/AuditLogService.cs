@@ -89,7 +89,7 @@ namespace Sparky.Services
             var target = await this._client.GetUserAsync(modLog.TargetUserId);
 
             var messageContent = await modLog.GenerateMessageAsync(this._client, this._config);
-            
+
             await message.ModifyAsync(messageContent);
 
             return true;
@@ -119,8 +119,8 @@ namespace Sparky.Services
 
                         int waitingTime = 30000;
 
-                        if (_actionCache.TryGetValue((user.Id, ModerationAction.Ban), out _) ||
-                            _actionCache.TryGetValue((user.Id, ModerationAction.TemporaryBan), out _))
+                        if (this._actionCache.TryGetValue((user.Id, ModerationAction.Ban), out _) ||
+                            this._actionCache.TryGetValue((user.Id, ModerationAction.TemporaryBan), out _))
                             waitingTime = 1000;
 
                         _entryCache.TryAdd(user, ban);
@@ -147,7 +147,7 @@ namespace Sparky.Services
                         if (unbanned)
                             await LogModerationType(guild, user, ban, ModerationAction.Softban);
                         else
-                            await LogModerationType(guild, user, ban, IsTemporary(ban) ? ModerationAction.TemporaryBan : ModerationAction.Ban);
+                            await LogModerationType(guild, user, ban, this._actionCache.TryGetValue((user.Id, ModerationAction.TemporaryBan), out _) ? ModerationAction.TemporaryBan : ModerationAction.Ban);
                         
                         _entryCache.Remove(user, out _);
                         break;
@@ -158,7 +158,7 @@ namespace Sparky.Services
 
                     case DiscordAuditLogMemberUpdateEntry update:
                             if ((update.AddedRoles?.Count ?? 0) != 0) // :)
-                                await LogModerationType(guild, user, update, IsTemporary(update) ? ModerationAction.TemporarySpecialRoleAdded : ModerationAction.SpecialRoleAdded);
+                                await LogModerationType(guild, user, update, this._actionCache.TryGetValue((user.Id, ModerationAction.TemporarySpecialRoleAdded), out _) ? ModerationAction.TemporarySpecialRoleAdded : ModerationAction.SpecialRoleAdded);
                             else if ((update.RemovedRoles?.Count ?? 0) != 0)
                                 await LogModerationType(guild, user, update, ModerationAction.SpecialRoleRemoved);
                         break;
@@ -168,9 +168,6 @@ namespace Sparky.Services
 
         public void AddDispatchService(DispatchService service)
             => this._dispatchService = this._dispatchService ?? service; // Prevent from overwriting
-
-        private bool IsTemporary(DiscordAuditLogEntry auditLogEntry)
-            => auditLogEntry.Reason?.Contains("Temporary") ?? false;
 
         private async Task LogModerationType(DiscordGuild guild, DiscordMember user, DiscordAuditLogEntry entry, ModerationAction type)
         {
