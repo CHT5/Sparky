@@ -76,6 +76,7 @@ namespace Sparky.Modules
         }
 
         [Command("ban")]
+        [RequireUserPermissions(Permissions.BanMembers)]
         public Task BanAsync(CommandContext context, DiscordMember member, [RemainingText] string reason = null)
             => BanAsync(context, member, 7, reason); 
 
