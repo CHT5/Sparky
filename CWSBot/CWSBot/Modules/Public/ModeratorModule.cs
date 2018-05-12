@@ -207,56 +207,66 @@ namespace CWSBot.Modules.Public
         [RequireUserPermission(GuildPermission.BanMembers)]
         public async Task KickAsync(SocketGuildUser targetUser, [Remainder] string reason = null)
         {
-            // try kicking our target
-            try
+            if (Context.User.Id == targetUser.Id)
+                await ReplyAsync("Kicking yourself is dumb, and you should feel dumb.");
+            
+            else if (Context.Member.Hierarchy <= targetUser.Hierarchy)
+                await ReplyAsync("You don't have the the necessary permissions.");
+            
+            else if (Context.CurrentMember.Hierarchy <= targetUser.Hierarchy){
+                await ReplyAsync("I don't have the necessary permissions.");
+            }
+            
+            else
             {
                 await targetUser.KickAsync();
-            }
-            catch
-            {
-                await ReplyAsync("Sorry, looks like I couldn't kick your target user. Perhaps their role is higher than mine?");
-                return;
-            }
-            // build our database entry and add it to the database
-            var modLog = new ModLog
-            {
-                Action = $"{targetUser.Mention} was kicked by {Context.User.Mention}.",
-                Time = DateTimeOffset.Now,
-                Reason = reason ?? "n/a",
-                MessageId = null, 
-                Severity = Severity.Medium,
-                ActorId = Context.User.Id
-            };
+                
+                // build our database entry and add it to the database
+                var modLog = new ModLog
+                {
+                    Action = $"{targetUser.Mention} was kicked by {Context.User.Mention}.",
+                    Time = DateTimeOffset.Now,
+                    Reason = reason ?? "n/a",
+                    MessageId = null, 
+                    Severity = Severity.Medium,
+                    ActorId = Context.User.Id
+                };
 
-            await MakeLogAsync(modLog, reason);
+                await MakeLogAsync(modLog, reason);
+            }
         }
 
         [Command("ban", RunMode = RunMode.Async)]
         [RequireUserPermission(GuildPermission.BanMembers)]
         public async Task BanAsync(SocketGuildUser targetUser, [Remainder] string reason = null)
         { 
-            // try banning our target
-            try
+            if (Context.User.Id == targetUser.Id)
+                await ReplyAsync("Banning yourself is dumb, and you should feel dumb.");
+            
+            else if (Context.Member.Hierarchy <= targetUser.Hierarchy)
+                await ReplyAsync("You don't have the the necessary permissions.");
+            
+            else if (Context.CurrentMember.Hierarchy <= targetUser.Hierarchy){
+                await ReplyAsync("I don't have the necessary permissions.");
+            }
+            
+            else
             {
                 await Context.Guild.AddBanAsync(targetUser);
-            }
-            catch
-            {
-                await ReplyAsync("Sorry, looks like I couldn't ban your target user. Perhaps their role is higher than mine?");
-                return;
-            }
-            // build our database entry and add it to the database
-            var modLog = new ModLog
-            {
-                Action = $"{targetUser.Mention} was banned by {Context.User.Mention}.",
-                Time = DateTimeOffset.Now,
-                Reason = reason ?? "n/a",
-                MessageId = null,
-                Severity = Severity.Severe,
-                ActorId = Context.User.Id
-            };
+                
+                // build our database entry and add it to the database
+                var modLog = new ModLog
+                {
+                    Action = $"{targetUser.Mention} was banned by {Context.User.Mention}.",
+                    Time = DateTimeOffset.Now,
+                    Reason = reason ?? "n/a",
+                    MessageId = null,
+                    Severity = Severity.Severe,
+                    ActorId = Context.User.Id
+                };
 
-            await MakeLogAsync(modLog, reason);
+                await MakeLogAsync(modLog, reason);
+            }
         }
 
         [Command("reason", RunMode = RunMode.Async)]
