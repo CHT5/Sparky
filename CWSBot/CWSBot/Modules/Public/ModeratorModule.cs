@@ -211,7 +211,7 @@ namespace CWSBot.Modules.Public
                 await ReplyAsync("Kicking yourself is dumb, and you should feel dumb.");
             
             else if (Context.Member.Hierarchy <= targetUser.Hierarchy)
-                await ReplyAsync("You don't have the the necessary permissions.");
+                await ReplyAsync("You don't have the necessary permissions.");
             
             else if (Context.CurrentMember.Hierarchy <= targetUser.Hierarchy){
                 await ReplyAsync("I don't have the necessary permissions.");
@@ -244,7 +244,7 @@ namespace CWSBot.Modules.Public
                 await ReplyAsync("Banning yourself is dumb, and you should feel dumb.");
             
             else if (Context.Member.Hierarchy <= targetUser.Hierarchy)
-                await ReplyAsync("You don't have the the necessary permissions.");
+                await ReplyAsync("You don't have the necessary permissions.");
             
             else if (Context.CurrentMember.Hierarchy <= targetUser.Hierarchy){
                 await ReplyAsync("I don't have the necessary permissions.");
